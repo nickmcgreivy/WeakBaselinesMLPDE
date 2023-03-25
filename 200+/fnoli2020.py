@@ -2531,7 +2531,7 @@ def get_poisson_solver(nx, ny, Lx, Ly, order):
     V_sp = jsparse.BCOO.from_scipy_sparse(sV)
     args = V_sp.data, V_sp.indices, N_global_elements
     kwargs = {"forward": True}
-    custom_lu_solve = jit(lambda b: sparse_solve_prim(b, *args, **kwargs))
+    custom_lu_solve = jit(lambda b: sparse_solve_prim(b, *args, **kwargs), device=jax.devices(backend='cpu')[0])
 
 
     platform = xla_bridge.get_backend().platform
@@ -2540,8 +2540,11 @@ def get_poisson_solver(nx, ny, Lx, Ly, order):
         def matrix_solve(b):
             return custom_lu_solve(b)
     elif platform == 'gpu' or platform == 'tpu':
+        
         def matrix_solve(b):
-            return hcb.call(custom_lu_solve, b, result_shape = b)
+            return jax.pure_callback(custom_lu_solve, b, b)
+            #return hcb.call(custom_lu_solve, b, result_shape = b)
+        
     else:
         raise Exception
 
@@ -3172,12 +3175,12 @@ def main():
     print(device)
     print("nu is {}".format(viscosity))
 
-    #print_runtime_scaled()
-    #print_runtime_adaptive()
+    print_runtime_scaled()
+    print_runtime_adaptive()
     print_runtime()
     #print_errors_scaled()
     #print_errors_adaptive()
-    print_errors()
+    #print_errors()
 
 if __name__ == '__main__':
     main()
