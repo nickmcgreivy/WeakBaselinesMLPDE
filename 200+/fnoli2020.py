@@ -2751,8 +2751,8 @@ runge_kutta = "ssp_rk3"
 nxs_dg = [8]
 t0 = 0.0
 
-N_compute_runtime = 3
-N_test = 2 # change to 5 or 10
+N_compute_runtime = 2
+N_test = 5 # change to 5 or 10
 
 
 t_runtime = 50.0
@@ -2760,6 +2760,7 @@ cfl_safety = 5.0 #10.0
 cfl_safety_adaptive = 0.28 * (2 * order + 1)
 cfl_safety_exact = 3.0
 cfl_safety_scaled = [10.0, 10.0]
+cfl_safety_cfd = [40.0, 35.0]
 Re = 1e3
 """
 t_runtime = 30.0
@@ -2767,6 +2768,7 @@ cfl_safety = 6.0
 cfl_safety_adaptive = 0.36 * 5
 cfl_safety_exact = 2.0
 cfl_safety_scaled = [6.0, 6.0]
+cfl_safety_cfd = [40.0, 40.0]
 Re = 1e4
 """
 viscosity = 1/Re
@@ -2777,10 +2779,9 @@ outer_steps = int(t_runtime)
 max_velocity = 7.0
 ic_wavenumber = 2
 nxs_fv_baseline = [16, 32, 64, 128, 256, 512]
-nxs_ps_baseline = [16, 32, 64, 128]#, 64, 128, 256]
-cfl_safety_cfd = [30.0, 30.0, 20.0]
-nx_exact_ps = ny_exact_ps = 256
-cfl_safety_cfd_exact = 5.0
+nxs_ps_baseline = [16, 32]#, 64, 128, 256]
+nx_exact_ps = ny_exact_ps = 64
+cfl_safety_cfd_exact = 10.0
 
 
 
@@ -2794,8 +2795,17 @@ def fno_forcing_cfd(grid, dx, dy, scale, offsets=None):
 	x = grid.mesh(offsets[0])[0]
 	y = grid.mesh(offsets[1])[1]
 
-	u = scale / (2 * PI) * grids.GridArray( np.cos( 2 * PI * (x + y) ), offsets[0], grid)
-	v = scale / (2 * PI) * grids.GridArray( np.sin( 2 * PI * (x + y) ), offsets[1], grid)
+	nx = x.shape[0]
+	ny = x.shape[1]
+
+	ff_x = lambda x, y, t: np.cos(2 * PI * (x + dx/2 + y))
+	ff_y = lambda x, y, t: np.sin(2 * PI * (x + y + dy/2))
+	x_term = inner_prod_with_legendre(nx, ny, Lx, Ly, 0, ff_x, 0.0, n = 8)[...,0]
+	y_term = inner_prod_with_legendre(nx, ny, Lx, Ly, 0, ff_y, 0.0, n = 8)[...,0]
+
+
+	u = scale / (2 * PI) * grids.GridArray( x_term, offsets[0], grid)
+	v = scale / (2 * PI) * grids.GridArray( y_term, offsets[1], grid)
 
 	if grid.ndim == 2:
 		f = (u, v)
