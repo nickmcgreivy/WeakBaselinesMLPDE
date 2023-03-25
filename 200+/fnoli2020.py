@@ -36,6 +36,8 @@ from scipy.sparse.linalg import splu
 from jaxlib import xla_client
 from jax.lib import xla_bridge
 
+import jax.experimental.host_callback as hcb
+
 sparse_solve_p = core.Primitive("sparse_solve")
 
 
@@ -2539,7 +2541,7 @@ def get_poisson_solver(nx, ny, Lx, Ly, order):
             return custom_lu_solve(b)
     elif platform == 'gpu' or platform == 'tpu':
         def matrix_solve(b):
-            return jax.pure_callback(custom_lu_solve, b, b, vectorized=True)
+            return hcb.call(custom_lu_solve, b, result_shape = b)
     else:
         raise Exception
 
