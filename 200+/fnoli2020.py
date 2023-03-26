@@ -1469,8 +1469,7 @@ def convert_DG_representation(
 	dx_high = Lx / nx_high
 	dy_high = Ly / ny_high
 
-	if nx_new < nx_high and ny_new < ny_high and nx_high % nx_new == 0 and ny_high % nx_new == 0 and nx_high % 2 == 0 and ny_high % 2 == 0:
-
+	if (nx_new < nx_high and ny_new < ny_high and nx_high % nx_new == 0 and ny_high % nx_new == 0 and nx_high % 2 == 0 and ny_high % 2 == 0) or (nx_high / nx_new > 2 and ny_high / ny_new > 2 and nx_high % 2 == 0 and ny_high % 2 == 0):
 
 		def convert_repr(a):
 			def f_high(x, y, t):
@@ -1480,7 +1479,6 @@ def convert_DG_representation(
 
 		a_ds = convert_repr(a)
 		return convert_DG_representation(a_ds, order_new, order_new, nx_new, ny_new, Lx, Ly, n=n)
-
 
 	else:
 
@@ -2768,12 +2766,12 @@ t0 = 0.0
 N_compute_runtime = 5
 N_test = 5 # change to 5 or 10
 
-nx_exact = 28
+nx_exact = 14
 ny_exact = nx_exact
-nxs_dg = [7, 14]
+nxs_dg = [7]
 
 t_runtime = 50.0
-cfl_safeties = [11.0, 8.0]
+cfl_safeties = [10.0, 8.0]
 cfl_safety_adaptive = 0.28 * (2 * order + 1)
 cfl_safety_exact = 3.0
 cfl_safety_scaled = [10.0, 10.0]
@@ -3181,8 +3179,6 @@ def print_runtime_scaled():
 def print_errors():
 	errors = onp.zeros((len(nxs_dg), outer_steps+1))
 
-	errors_all = onp.zeros((len(nxs_dg)))
-
 	for _ in range(N_test):
 		a0 = get_initial_condition_FNO()
 
@@ -3214,7 +3210,10 @@ def print_errors():
 				a_ex = convert_DG_representation(exact_trajectory[j], order, order_exact, nx, ny, Lx, Ly, n=8)
 				errors[n, j] += compute_percent_error(trajectory[j], a_ex) / N_test
 
-	print("nxs: {}".format(nxs_dg))
+
+	for i, nx in enumerate(nxs_dg):
+		print("nx = {}, errors = {}".format(nx, np.mean(errors[i])))
+
 
 
 def print_errors_adaptive():
