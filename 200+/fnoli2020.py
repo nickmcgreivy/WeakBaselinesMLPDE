@@ -2752,15 +2752,15 @@ nxs_dg = [8]
 t0 = 0.0
 
 N_compute_runtime = 2
-N_test = 5 # change to 5 or 10
+N_test = 3 # change to 5 or 10
 
 
 t_runtime = 50.0
-cfl_safety = 5.0 #10.0
+cfl_safety = 10.0
 cfl_safety_adaptive = 0.28 * (2 * order + 1)
 cfl_safety_exact = 3.0
 cfl_safety_scaled = [10.0, 10.0]
-cfl_safety_cfd = [40.0, 35.0]
+cfl_safety_cfd = [40.0, 35.0, 20.0, 10.0, 5.0]
 Re = 1e3
 """
 t_runtime = 30.0
@@ -2777,15 +2777,29 @@ outer_steps = int(t_runtime)
 
 
 max_velocity = 7.0
-ic_wavenumber = 2
-nxs_fv_baseline = [16, 32, 64, 128, 256, 512]
-nxs_ps_baseline = [16, 32]#, 64, 128, 256]
-nx_exact_ps = ny_exact_ps = 64
-cfl_safety_cfd_exact = 10.0
-
-
+nxs_ps_baseline = [16, 32, 64, 128, 256]
+nx_exact_ps = ny_exact_ps = 256
+cfl_safety_cfd_exact = 2.0
 
 key = jax.random.PRNGKey(42)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 def fno_forcing_cfd(grid, dx, dy, scale, offsets=None):
@@ -3321,14 +3335,15 @@ def print_errors_ps():
 
 		v0_fno = get_initial_condition_FNO()
 
-		v0_exact = downsample(v0_fno, nx_exact_ps, ny_exact_ps)
-		v_hat0_exact = np.fft.rfftn(v0_exact)
-		trajectory_hat_exact = rollout_fn_exact(v_hat0_exact)
-		trajectory_hat_ps_exact = concatenate_vorticity(v_hat0_exact, trajectory_hat_exact)
-		if np.isnan(trajectory_hat_ps_exact).any():
+		a_i = convert_DG_representation(v0_fno[None], order_exact, 0, nx_exact, ny_exact, Lx, Ly, n=8)[0]
+		exact_step_fn = get_dg_step_fn(nx_exact, ny_exact, order_exact, t_chunk, cfl_safety = cfl_safety_exact)
+		exact_rollout_fn = get_trajectory_fn(exact_step_fn, outer_steps)
+		exact_trajectory = exact_rollout_fn(a_i)
+		exact_trajectory = concatenate_vorticity(a_i, exact_trajectory)
+
+		if np.isnan(exact_trajectory).any():
 			print("NaN in exact trajectory")
 			raise Exception
-		trajectory_ps_exact = np.fft.irfftn(trajectory_hat_ps_exact, axes=(1,2))
 
 
 		for i, nx in enumerate(nxs_ps_baseline):
@@ -3347,11 +3362,13 @@ def print_errors_ps():
 			trajectory_ps = np.fft.irfftn(trajectory_hat_ps, axes=(1,2))
 
 			for j in range(outer_steps+1):
-				a_ex = downsample(trajectory_ps_exact[j], nx, ny)
-				errors[i, j] += compute_percent_error_ps(trajectory_ps[j], a_ex) / N_test
+				a_ex = convert_DG_representation(exact_trajectory[j][None], 0, order_exact, nx, ny, Lx, Ly, n=8)[0]
+				errors[i, j] += compute_percent_error(trajectory_ps[j][...,None], a_ex) / N_test
 
 	print("nxs: {}".format(nxs_ps_baseline))
 	print("Mean errors: {}".format(np.mean(errors, axis=-1)))
+	for i, nx in enumerate(nxs_ps_baseline):
+		print(errors[i])
 
 
 
