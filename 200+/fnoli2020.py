@@ -2771,7 +2771,7 @@ ny_exact = nx_exact
 nxs_dg = [7]
 
 t_runtime = 50.0
-cfl_safeties = [10.0, 8.0]
+cfl_safeties = [11.0, 8.0]
 cfl_safety_adaptive = 0.28 * (2 * order + 1)
 cfl_safety_exact = 3.0
 cfl_safety_scaled = [10.0, 10.0]
