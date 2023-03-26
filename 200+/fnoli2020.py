@@ -37,14 +37,31 @@ from jax.lib import xla_bridge
 from time import time
 import matplotlib.pyplot as plt
 import seaborn as sns
+"""
 import jax_cfd.base as cfd
 from jax_cfd.base import boundaries
 from jax_cfd.base import forcings
 import jax_cfd.base.grids as grids
 import jax_cfd.spectral as spectral
-config.update("jax_enable_x64", True)
-
+"""
 PI = np.pi
+
+
+
+
+
+use_64_bit = True
+config.update("jax_enable_x64", use_64_bit)
+if use_64_bit:
+	floatdtype = np.float64
+else:
+	floatdtype = np.float32
+
+
+
+
+
+
 
 
 
@@ -996,7 +1013,7 @@ def get_Q_top(order):
 ### Step 3: Generate b coefficients 
 
 def get_b_right(order):
-	Q = np.asarray(get_Q_right(order), dtype=float)
+	Q = np.asarray(get_Q_right(order), dtype=floatdtype)
 	
 	def b_right(zeta):
 		a = np.concatenate((zeta, np.roll(zeta, -1, axis=0)), axis=-1)
@@ -1005,13 +1022,14 @@ def get_b_right(order):
 	return b_right
 
 def get_b_top(order):
-	Q = np.asarray(get_Q_top(order), dtype=float)
+	Q = np.asarray(get_Q_top(order), dtype=floatdtype)
 
 	def b_top(zeta):
 		a = np.concatenate((zeta, np.roll(zeta, -1, axis=1)), axis=-1)
 		return a @ Q.T
 
 	return b_top
+
 
 ### Step 4: Compute boundary term
 
@@ -1072,17 +1090,16 @@ def get_A_bottom(order):
 	return A
 
 
+
 def get_boundary_term(order, Lx, Ly):
 
-	A_R = np.asarray(get_A_right(order), dtype=float) * (Ly/Lx)
-	A_T = np.asarray(get_A_top(order), dtype=float) * (Lx/Ly)
-	A_L = np.asarray(get_A_left(order), dtype=float) * (Ly/Lx)
-	A_B = np.asarray(get_A_bottom(order), dtype=float) * (Lx/Ly)
+	A_R = np.asarray(get_A_right(order), dtype=floatdtype) * (Ly/Lx)
+	A_T = np.asarray(get_A_top(order), dtype=floatdtype) * (Lx/Ly)
+	A_L = np.asarray(get_A_left(order), dtype=floatdtype) * (Ly/Lx)
+	A_B = np.asarray(get_A_bottom(order), dtype=floatdtype) * (Lx/Ly)
 
 	f_b_right = get_b_right(order)
 	f_b_top = get_b_top(order)
-	#f_b_left = get_b_right(order)
-	#f_b_bottom = get_b_bottom(order)
 
 	def f_boundary(zeta):
 		b_R = f_b_right(zeta)
@@ -1118,7 +1135,7 @@ def get_V(order, Lx, Ly):
 	return V
 
 def get_volume_term(order, Lx, Ly):
-	V = np.asarray(get_V(order, Lx, Ly), dtype=float)
+	V = np.asarray(get_V(order, Lx, Ly), dtype=floatdtype)
 
 	def f_volume(zeta):
 		return zeta @ V
@@ -1413,7 +1430,7 @@ def f_to_FE(nx, ny, Lx, Ly, order, func, t):
 	x_i = dx * i + dx / 2
 	j = np.arange(ny)
 	y_i = dy * j + dx / 2
-	nodes = np.asarray(node_locations(order), dtype=float)
+	nodes = np.asarray(node_locations(order), dtype=floatdtype)
 
 	x_eval = (
 		np.ones((nx, ny, nodes.shape[0])) * x_i[:, None, None]
@@ -1439,27 +1456,41 @@ def f_to_FE(nx, ny, Lx, Ly, order, func, t):
 	),
 )
 def convert_DG_representation(
-	a, order_new, order_high, nx_new, ny_new, Lx, Ly, n = 8
+	a, order_new, order_old, nx_new, ny_new, Lx, Ly, n = 8
 ):
 	"""
 	Inputs:
-	a: (nt, nx, ny, num_elements(order_high))
+	a: (nx, ny, num_elements(order_old))
 
 	Outputs:
-	a_converted: (nt, nx_new, ny_new, num_elements(order_new))
+	a_converted: (nx_new, ny_new, num_elements(order_new))
 	"""
-	_, nx_high, ny_high = a.shape[0:3]
+	nx_high, ny_high = a.shape[0:2]
 	dx_high = Lx / nx_high
 	dy_high = Ly / ny_high
 
-	def convert_repr(a):
-		def f_high(x, y, t):
-			return _evalf_2D_integrate(x, y, a, dx_high, dy_high, order_high)
+	if nx_new < nx_high and ny_new < ny_high and nx_high % nx_new == 0 and ny_high % nx_new == 0 and nx_high % 2 == 0 and ny_high % 2 == 0:
 
-		return f_to_DG(nx_new, ny_new, Lx, Ly, order_new, f_high, 0.0, n=n)
 
-	vmap_convert_repr = vmap(convert_repr)
-	return vmap_convert_repr(a)
+		def convert_repr(a):
+			def f_high(x, y, t):
+				return _evalf_2D_integrate(x, y, a, dx_high, dy_high, order_old)
+
+			return f_to_DG(nx_high // 2, ny_high // 2, Lx, Ly, order_new, f_high, 0.0, n=n)
+
+		a_ds = convert_repr(a)
+		return convert_DG_representation(a_ds, order_new, order_new, nx_new, ny_new, Lx, Ly, n=n)
+
+
+	else:
+
+		def convert_repr(a):
+			def f_high(x, y, t):
+				return _evalf_2D_integrate(x, y, a, dx_high, dy_high, order_old)
+
+			return f_to_DG(nx_new, ny_new, Lx, Ly, order_new, f_high, 0.0, n=n)
+
+		return convert_repr(a)
 
 
 def vorticity_to_velocity(Lx, Ly, a, f_poisson):
@@ -1558,7 +1589,7 @@ class GaussianRF(object):
 
 def get_initial_condition_FNO(s=256):
 	GRF = GaussianRF(2, s, alpha=2.5, tau=7)
-	return np.asarray(GRF.sample(1)[0][:,:,None], dtype=np.float64)
+	return np.asarray(GRF.sample(1)[0][:,:,None], dtype=floatdtype)
 
 
 
@@ -2622,8 +2653,10 @@ def time_derivative_2d_navier_stokes(
 	else:
 		diffusion_term = 0.0
 
+	pb_term = f_poisson_bracket(zeta, phi)
+
 	return (
-		(f_poisson_bracket(zeta, phi) + forcing_term + diffusion_term)
+		(pb_term + forcing_term + diffusion_term)
 		/ denominator[None, None, :]
 	)
 
@@ -2664,21 +2697,6 @@ def trajectory_fn(inner_fn, steps, carry=True, start_with_input=True):
 	def multistep(x_init):
 		return jax.lax.scan(step, x_init, xs=None, length=steps)
 	return multistep
-
-
-"""
-def get_trajectory_fn(inner_fn, outer_steps, carry=True, start_with_input=True):
-	rollout_fn = trajectory_fn(inner_fn, outer_steps, carry=carry, start_with_input=start_with_input)
-	if carry:
-		def get_rollout(x_init):
-			_, trajectory = rollout_fn(x_init)
-			return trajectory
-	else:
-		def get_rollout(x_init):
-			out, _ = rollout_fn(x_init)
-	return get_rollout
-"""
-
 
 
 
@@ -2744,44 +2762,52 @@ Lx = 1.0
 Ly = 1.0
 order_exact = 2
 order = order_exact
-nx_exact = 16
-ny_exact = nx_exact
 forcing_coefficient = 0.1
 runge_kutta = "ssp_rk3"
-nxs_dg = [8]
 t0 = 0.0
+N_compute_runtime = 5
+N_test = 5 # change to 5 or 10
 
-N_compute_runtime = 2
-N_test = 3 # change to 5 or 10
-
+nx_exact = 28
+ny_exact = nx_exact
+nxs_dg = [7, 14]
 
 t_runtime = 50.0
-cfl_safety = 10.0
+cfl_safeties = [11.0, 8.0]
 cfl_safety_adaptive = 0.28 * (2 * order + 1)
 cfl_safety_exact = 3.0
 cfl_safety_scaled = [10.0, 10.0]
-cfl_safety_cfd = [40.0, 35.0, 20.0, 10.0, 5.0]
+#cfl_safety_cfd = [40.0, 40.0, 35.0, 20.0, 10.0, 5.0]
 Re = 1e3
+
 """
 t_runtime = 30.0
-cfl_safety = 6.0
+cfl_safeties = 6.0
 cfl_safety_adaptive = 0.36 * 5
 cfl_safety_exact = 2.0
 cfl_safety_scaled = [6.0, 6.0]
 cfl_safety_cfd = [40.0, 40.0]
 Re = 1e4
 """
+
 viscosity = 1/Re
 t_chunk = 1.0
 outer_steps = int(t_runtime)
 
 
+nx_ps_exact = ny_ps_exact = 128
 max_velocity = 7.0
-nxs_ps_baseline = [16, 32, 64, 128, 256]
-nx_exact_ps = ny_exact_ps = 256
-cfl_safety_cfd_exact = 2.0
+nxs_ps_baseline = [8, 16, 32, 64]#, 128, 256]
+cfl_safety_cfd_exact = 5.0
 
 key = jax.random.PRNGKey(42)
+
+
+
+
+
+
+
 
 
 
@@ -2814,8 +2840,8 @@ def fno_forcing_cfd(grid, dx, dy, scale, offsets=None):
 
 	ff_x = lambda x, y, t: np.cos(2 * PI * (x + dx/2 + y))
 	ff_y = lambda x, y, t: np.sin(2 * PI * (x + y + dy/2))
-	x_term = inner_prod_with_legendre(nx, ny, Lx, Ly, 0, ff_x, 0.0, n = 8)[...,0]
-	y_term = inner_prod_with_legendre(nx, ny, Lx, Ly, 0, ff_y, 0.0, n = 8)[...,0]
+	x_term = inner_prod_with_legendre(nx, ny, Lx, Ly, 0, ff_x, 0.0, n = 8)[...,0] / (dx * dy)
+	y_term = inner_prod_with_legendre(nx, ny, Lx, Ly, 0, ff_y, 0.0, n = 8)[...,0] / (dx * dy)
 
 
 	u = scale / (2 * PI) * grids.GridArray( x_term, offsets[0], grid)
@@ -2952,7 +2978,7 @@ def get_inner_steps_dt_DG(nx, ny, order, cfl_safety, T):
 	dt = T / inner_steps
 	return inner_steps, dt
 
-def get_dg_step_fn(nx, ny, order, T, cfl_safety=cfl_safety):
+def get_dg_step_fn(nx, ny, order, T, cfl_safety):
 	flux = Flux.UPWIND
 	
 	f_poisson_bracket = get_poisson_bracket(order, flux)
@@ -3035,23 +3061,35 @@ def print_runtime():
 
 	a0 = get_initial_condition_FNO()
 
-	for nx in nxs_dg:
+	for i, nx in enumerate(nxs_dg):
 		ny = nx
 
-		a_i = convert_DG_representation(a0[None], order, 0, nx, ny, Lx, Ly, n=8)[0]
+		a_i = convert_DG_representation(a0, order, 0, nx, ny, Lx, Ly, n=8)
 
-		step_fn = get_dg_step_fn(nx, ny, order, t_runtime)
+		step_fn = get_dg_step_fn(nx, ny, order, t_runtime, cfl_safety = cfl_safeties[i])
 		rollout_fn = get_trajectory_fn(step_fn, 1)
+
 
 		a_final = rollout_fn(a_i)
 		a_final.block_until_ready()
+
+		if np.isnan(a_final).any():
+			print("NaN in runtime trajectory")
+			raise Exception
+
 		times = onp.zeros(N_compute_runtime)
 		for n in range(N_compute_runtime):
 			t1 = time()
 			a_final = rollout_fn(a_i)
 			a_final.block_until_ready()
 			t2 = time()
+
+			if np.isnan(a_final).any():
+				print("NaN in runtime trajectory")
+				raise Exception
+
 			times[n] = t2 - t1
+
 
 		print("order = {}, t_runtime = {}, nx = {}".format(order, t_runtime, nx))
 		print("runtimes: {}".format(times))
@@ -3064,7 +3102,7 @@ def print_runtime_adaptive():
 	for nx in nxs_dg:
 		ny = nx
 
-		a_i = convert_DG_representation(a0[None], order, 0, nx, ny, Lx, Ly, n=8)[0]
+		a_i = convert_DG_representation(a0, order, 0, nx, ny, Lx, Ly, n=8)
 
 		f_poisson_bracket = get_poisson_bracket(order, flux)
 		f_poisson_solve = get_poisson_solver(nx, ny, Lx, Ly, order)
@@ -3084,14 +3122,14 @@ def print_runtime_adaptive():
 		rollout_fn_adaptive = get_trajectory_fn_adaptive(adaptive_step_fn, dt_fn, t_runtime, 1, f_poisson_solve)
 
 		a0 = get_initial_condition_FNO()
-		a_i = convert_DG_representation(a0[None], order, 0, nx, ny, Lx, Ly, n=8)[0]
+		a_i = convert_DG_representation(a0, order, 0, nx, ny, Lx, Ly, n=8)
 
 		a_final = rollout_fn_adaptive(a_i)
 		a_final.block_until_ready()
 		times = onp.zeros(N_compute_runtime)
 		for n in range(N_compute_runtime):
 			a0 = get_initial_condition_FNO()
-			a_i = convert_DG_representation(a0[None], order, 0, nx, ny, Lx, Ly, n=8)[0]
+			a_i = convert_DG_representation(a0, order, 0, nx, ny, Lx, Ly, n=8)
 
 			t1 = time()
 			a_final = rollout_fn_adaptive(a_i)
@@ -3112,7 +3150,7 @@ def print_runtime_scaled():
 	for nx in nxs_dg:
 		ny = nx
 
-		a_i = convert_DG_representation(a0[None], order, 0, nx, ny, Lx, Ly, n=8)[0]
+		a_i = convert_DG_representation(a0, order, 0, nx, ny, Lx, Ly, n=8)
 
 		@jax.jit
 		def rollout_fn(a0):
@@ -3143,10 +3181,12 @@ def print_runtime_scaled():
 def print_errors():
 	errors = onp.zeros((len(nxs_dg), outer_steps+1))
 
+	errors_all = onp.zeros((len(nxs_dg)))
+
 	for _ in range(N_test):
 		a0 = get_initial_condition_FNO()
 
-		a_i = convert_DG_representation(a0[None], order_exact, 0, nx_exact, ny_exact, Lx, Ly, n=8)[0]
+		a_i = convert_DG_representation(a0, order_exact, 0, nx_exact, ny_exact, Lx, Ly, n=8)
 		exact_step_fn = get_dg_step_fn(nx_exact, ny_exact, order_exact, t_chunk, cfl_safety = cfl_safety_exact)
 		exact_rollout_fn = get_trajectory_fn(exact_step_fn, outer_steps)
 		exact_trajectory = exact_rollout_fn(a_i)
@@ -3160,8 +3200,8 @@ def print_errors():
 		for n, nx in enumerate(nxs_dg):
 			ny = nx
 
-			a_i = convert_DG_representation(a0[None], order, 0, nx, ny, Lx, Ly, n=8)[0]
-			step_fn = get_dg_step_fn(nx, ny, order, t_chunk)
+			a_i = convert_DG_representation(a0, order, 0, nx, ny, Lx, Ly, n=8)
+			step_fn = get_dg_step_fn(nx, ny, order, t_chunk, cfl_safety = cfl_safeties[n])
 			rollout_fn = get_trajectory_fn(step_fn, outer_steps)
 			trajectory = rollout_fn(a_i)
 			trajectory = concatenate_vorticity(a_i, trajectory)
@@ -3171,10 +3211,10 @@ def print_errors():
 				raise Exception
 
 			for j in range(outer_steps+1):
-				a_ex = convert_DG_representation(exact_trajectory[j][None], order, order_exact, nx, ny, Lx, Ly, n=8)[0]
+				a_ex = convert_DG_representation(exact_trajectory[j], order, order_exact, nx, ny, Lx, Ly, n=8)
 				errors[n, j] += compute_percent_error(trajectory[j], a_ex) / N_test
+
 	print("nxs: {}".format(nxs_dg))
-	print("Mean errors: {}".format(np.mean(errors, axis=-1)))
 
 
 def print_errors_adaptive():
@@ -3183,7 +3223,7 @@ def print_errors_adaptive():
 
 	for _ in range(N_test):
 		a0 = get_initial_condition_FNO()
-		a_i = convert_DG_representation(a0[None], order_exact, 0, nx_exact, ny_exact, Lx, Ly, n=8)[0]
+		a_i = convert_DG_representation(a0, order_exact, 0, nx_exact, ny_exact, Lx, Ly, n=8)
 		
 		exact_step_fn = get_dg_step_fn(nx_exact, ny_exact, order_exact, t_chunk, cfl_safety = cfl_safety_exact)
 		exact_rollout_fn = get_trajectory_fn(exact_step_fn, outer_steps)
@@ -3198,7 +3238,7 @@ def print_errors_adaptive():
 		for n, nx in enumerate(nxs_dg):
 			ny = nx
 
-			a_i = convert_DG_representation(a0[None], order, 0, nx, ny, Lx, Ly, n=8)[0]
+			a_i = convert_DG_representation(a0, order, 0, nx, ny, Lx, Ly, n=8)
 
 			f_poisson_bracket = get_poisson_bracket(order, flux)
 			f_poisson_solve = get_poisson_solver(nx, ny, Lx, Ly, order)
@@ -3225,7 +3265,7 @@ def print_errors_adaptive():
 				raise Exception
 
 			for j in range(outer_steps+1):
-				a_ex = convert_DG_representation(exact_trajectory[j][None], order, order_exact, nx, ny, Lx, Ly, n=8)[0]
+				a_ex = convert_DG_representation(exact_trajectory[j], order, order_exact, nx, ny, Lx, Ly, n=8)
 				errors[n, j] += compute_percent_error(trajectory[j], a_ex) / N_test
 
 
@@ -3241,7 +3281,7 @@ def print_errors_scaled():
 	for _ in range(N_test):
 		a0 = get_initial_condition_FNO()
 
-		a_i = convert_DG_representation(a0[None], order_exact, 0, nx_exact, ny_exact, Lx, Ly, n=8)[0]
+		a_i = convert_DG_representation(a0, order_exact, 0, nx_exact, ny_exact, Lx, Ly, n=8)
 		exact_step_fn = get_dg_step_fn(nx_exact, ny_exact, order_exact, t_chunk, cfl_safety = cfl_safety_exact)
 		exact_rollout_fn = get_trajectory_fn(exact_step_fn, outer_steps)
 		exact_trajectory = exact_rollout_fn(a_i)
@@ -3255,7 +3295,7 @@ def print_errors_scaled():
 		for n, nx in enumerate(nxs_dg):
 			ny = nx
 
-			a_i = convert_DG_representation(a0[None], order, 0, nx, ny, Lx, Ly, n=8)[0]
+			a_i = convert_DG_representation(a0, order, 0, nx, ny, Lx, Ly, n=8)
 			step_fn_one = get_dg_step_fn(nx, ny, order, t_chunk/2, cfl_safety=cfl_safety_scaled[0])
 			step_fn_two = get_dg_step_fn(nx, ny, order, t_chunk/2, cfl_safety=cfl_safety_scaled[1])
 
@@ -3274,7 +3314,7 @@ def print_errors_scaled():
 				raise Exception
 
 			for j in range(outer_steps+1):
-				a_ex = convert_DG_representation(exact_trajectory[j][None], order, order_exact, nx, ny, Lx, Ly, n=8)[0]
+				a_ex = convert_DG_representation(exact_trajectory[j], order, order_exact, nx, ny, Lx, Ly, n=8)
 				errors[n, j] += compute_percent_error(trajectory[j], a_ex) / N_test
 	print("nxs: {}".format(nxs_dg))
 	print("Mean errors: {}".format(np.mean(errors, axis=-1)))
@@ -3293,7 +3333,7 @@ def print_runtime_ps():
 		
 
 		v0_fno = get_initial_condition_FNO()
-		v0 = downsample(v0_fno, nx, ny)
+		v0 = downsample(v0_fno[...,0], nx, ny)
 		v_hat0 = np.fft.rfftn(v0)
 
 		trajectory_hat = rollout_fn(v_hat0).block_until_ready()
@@ -3306,7 +3346,7 @@ def print_runtime_ps():
 		for n in range(N_compute_runtime):
 
 			v0_fno = get_initial_condition_FNO()
-			v0 = downsample(v0_fno, nx, ny)
+			v0 = downsample(v0_fno[...,0], nx, ny)
 			v_hat0 = np.fft.rfftn(v0)
 
 			t1 = time()
@@ -3325,23 +3365,26 @@ def print_runtime_ps():
 
 def print_errors_ps():
 	errors = onp.zeros((len(nxs_ps_baseline), outer_steps+1))
-
-
-	step_fn_exact = get_ps_step_fn(nx_exact_ps, ny_exact_ps, t_chunk, cfl_safety_cfd_exact)
-	rollout_fn_exact = jit(get_trajectory_fn_ps(step_fn_exact, outer_steps))
 	
+
+	step_fn_exact = get_ps_step_fn(nx_ps_exact, ny_ps_exact, t_chunk, cfl_safety_cfd_exact)
+	rollout_fn_exact = jit(get_trajectory_fn_ps(step_fn_exact, outer_steps))
 
 	for _ in range(N_test):
 
-		v0_fno = get_initial_condition_FNO()
+		v0_fno = get_initial_condition_FNO()[...,0]
 
-		a_i = convert_DG_representation(v0_fno[None], order_exact, 0, nx_exact, ny_exact, Lx, Ly, n=8)[0]
-		exact_step_fn = get_dg_step_fn(nx_exact, ny_exact, order_exact, t_chunk, cfl_safety = cfl_safety_exact)
-		exact_rollout_fn = get_trajectory_fn(exact_step_fn, outer_steps)
-		exact_trajectory = exact_rollout_fn(a_i)
-		exact_trajectory = concatenate_vorticity(a_i, exact_trajectory)
+		v0_ex = downsample(v0_fno, nx_ps_exact, ny_ps_exact)
+		v_hat0_ex = np.fft.rfftn(v0_ex)
+		trajectory_hat_ps_ex = rollout_fn_exact(v_hat0_ex)
+		trajectory_hat_ps_ex = concatenate_vorticity(v_hat0_ex, trajectory_hat_ps_ex)
+		trajectory_ps_ex = np.fft.irfftn(trajectory_hat_ps_ex, axes=(1,2))
+		
 
-		if np.isnan(exact_trajectory).any():
+
+
+
+		if np.isnan(trajectory_ps_ex).any():
 			print("NaN in exact trajectory")
 			raise Exception
 
@@ -3354,15 +3397,15 @@ def print_errors_ps():
 
 			v0 = downsample(v0_fno, nx, ny)
 			v_hat0 = np.fft.rfftn(v0)
-			trajectory_hat = rollout_fn(v_hat0)
-			trajectory_hat_ps = concatenate_vorticity(v_hat0, trajectory_hat)
+			trajectory_hat_ps = rollout_fn(v_hat0)
 			if np.isnan(trajectory_hat_ps).any():
 				print("NaN in trajectory nx = {}".format(nx))
 				raise Exception
 			trajectory_ps = np.fft.irfftn(trajectory_hat_ps, axes=(1,2))
+			trajectory_ps = concatenate_vorticity(v0, trajectory_ps)
 
 			for j in range(outer_steps+1):
-				a_ex = convert_DG_representation(exact_trajectory[j][None], 0, order_exact, nx, ny, Lx, Ly, n=8)[0]
+				a_ex = downsample(trajectory_ps_ex[j], nx, ny)[..., None]
 				errors[i, j] += compute_percent_error(trajectory_ps[j][...,None], a_ex) / N_test
 
 	print("nxs: {}".format(nxs_ps_baseline))
@@ -3375,19 +3418,21 @@ def print_errors_ps():
 
 
 
-print_errors_ps()
-print_runtime_ps()
 
 """
+print_errors_ps()
+print_runtime_ps()
+"""
 
+"""
 # plot
 v0_fno = get_initial_condition_FNO()
 
 nx_dg = 16
 ny_dg = 16
 
-a_i = convert_DG_representation(v0_fno[None], order, 0, nx_dg, ny_dg, Lx, Ly, n=8)[0]
-step_fn = get_dg_step_fn(nx_dg, ny_dg, order, 3.0)
+a_i = convert_DG_representation(v0_fno, order, 0, nx_dg, ny_dg, Lx, Ly, n=8)
+step_fn = get_dg_step_fn(nx_dg, ny_dg, order, 3.0, cfl_safety = cfl_safeties[0])
 rollout_fn = get_trajectory_fn(step_fn, 3)
 traj = rollout_fn(-a_i)
 traj = concatenate_vorticity(a_i, -traj)
@@ -3421,10 +3466,10 @@ for i, nx in enumerate(nxs_ps_baseline):
 
 	plt.show()
 
+
 """
 
 
-"""
 
 device = xla_bridge.get_backend().platform
 print(device)
@@ -3432,13 +3477,13 @@ print("nu is {}".format(viscosity))
 
 #print_runtime_scaled()
 #print_runtime_adaptive()
-#print_runtime()
+print_runtime()
 #print_errors_scaled()
 #print_errors_adaptive()
-#print_errors()
+print_errors()
 
 
-"""
+
 
 
 
