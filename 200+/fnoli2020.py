@@ -1163,7 +1163,7 @@ def _trapezoidal_integration(f, xi, xf, yi, yf, n=None):
 	return (xf - xi) * (yf - yi) * (f(xi, yi) + f(xf, yi) + f(xi, yf) + f(xf, yf)) / 4
 
 
-def _2d_fixed_quad(f, xi, xf, yi, yf, n=3):
+def _2d_fixed_quad(f, xi, xf, yi, yf, n=10):
 	"""
 	Takes a 2D-valued function of two 2D inputs
 	f(x,y) and four scalars xi, xf, yi, yf, and
@@ -1230,6 +1230,34 @@ def _2d_fixed_quad(f, xi, xf, yi, yf, n=3):
 				0.1012285362903762591525,
 			]
 		),
+		9: np.asarray(
+			[
+				0.0812743883615744119718922,
+				0.1806481606948574040584720,
+				0.2606106964029354623187429,
+				0.3123470770400028400686304,
+				0.3302393550012597631645251,
+				0.3123470770400028400686304,
+				0.2606106964029354623187429,
+				0.1806481606948574040584720,
+				0.0812743883615744119718922,
+			]
+		),
+		10: np.asarray(
+			[
+				0.0666713443086881375935688,
+				0.1494513491505805931457763,
+				0.2190863625159820439955349,
+				0.2692667193099963550912269,
+				0.2955242247147528701738930,
+				0.2955242247147528701738930,
+				0.2692667193099963550912269,
+				0.2190863625159820439955349,
+				0.1494513491505805931457763,
+				0.0666713443086881375935688,
+			]
+		),
+
 	}[n]
 
 	xi_i_1d = {
@@ -1284,6 +1312,33 @@ def _2d_fixed_quad(f, xi, xf, yi, yf, n=3):
 				0.5255324099163289858177,
 				0.7966664774136267395916,
 				0.9602898564975362316836,
+			]
+		),
+		9: np.asarray(
+			[
+				-0.9681602395076260898355762,
+				-0.8360311073266357942994298,
+				-0.6133714327005903973087020,
+				-0.3242534234038089290385380,
+				0.0,
+				0.3242534234038089290385380,
+				0.6133714327005903973087020,
+				0.8360311073266357942994298,
+				0.9681602395076260898355762,
+			]
+		),
+		10: np.asarray(
+			[
+				-0.9739065285171717200779640,
+				-0.8650633666889845107320967,
+				-0.6794095682990244062343274,
+				-0.4333953941292471907992659,
+				-0.1488743389816312108848260,
+				0.1488743389816312108848260,
+				0.4333953941292471907992659,
+				0.6794095682990244062343274,
+				0.8650633666889845107320967,
+				0.9739065285171717200779640,
 			]
 		),
 	}[n]
@@ -1364,7 +1419,7 @@ def _eval_legendre(order):
 	return f
 
 
-def inner_prod_with_legendre(nx, ny, Lx, Ly, order, func, t, quad_func=_2d_fixed_quad, n=5):
+def inner_prod_with_legendre(nx, ny, Lx, Ly, order, func, t, quad_func=_2d_fixed_quad, n=10):
 	dx = Lx / nx
 	dy = Ly / ny
 
@@ -1393,7 +1448,7 @@ def inner_prod_with_legendre(nx, ny, Lx, Ly, order, func, t, quad_func=_2d_fixed
 	to_int_func = lambda x, y: func(x, y, t) * _eval_legendre(order)(xi_x(x), xi_y(y))
 	return _vmap_integrate(to_int_func, x_i, x_f, y_i, y_f)
 
-def f_to_DG(nx, ny, Lx, Ly, order, func, t, quad_func=_2d_fixed_quad, n=5):
+def f_to_DG(nx, ny, Lx, Ly, order, func, t, quad_func=_2d_fixed_quad, n=10):
 	"""
 	Takes a function f of type lambda x, y, t: f(x,y,t) and
 	generates the DG representation of the solution, an
@@ -1418,7 +1473,7 @@ def f_to_DG(nx, ny, Lx, Ly, order, func, t, quad_func=_2d_fixed_quad, n=5):
 	)
 
 
-def f_to_source(nx, ny, Lx, Ly, order, func, t, quad_func=_2d_fixed_quad, n=5):
+def f_to_source(nx, ny, Lx, Ly, order, func, t, quad_func=_2d_fixed_quad, n=10):
 	repr_dg = f_to_DG(nx, ny, Lx, Ly, order, func, t, quad_func=quad_func, n=n)
 	return repr_dg.at[:, :, 0].add(-np.mean(repr_dg[:, :, 0]))
 
@@ -1456,7 +1511,7 @@ def f_to_FE(nx, ny, Lx, Ly, order, func, t):
 	),
 )
 def convert_DG_representation(
-	a, order_new, order_old, nx_new, ny_new, Lx, Ly, n = 8
+	a, order_new, order_old, nx_new, ny_new, Lx, Ly, n = 10
 ):
 	"""
 	Inputs:
@@ -2770,22 +2825,25 @@ nx_exact = 14
 ny_exact = nx_exact
 nxs_dg = [7]
 
-t_runtime = 50.0
-cfl_safeties = [11.0, 8.0]
-cfl_safety_adaptive = 0.28 * (2 * order + 1)
-cfl_safety_exact = 3.0
-cfl_safety_scaled = [10.0, 10.0]
-#cfl_safety_cfd = [40.0, 40.0, 35.0, 20.0, 10.0, 5.0]
 Re = 1e3
+t_runtime = 50.0
+cfl_safeties = [11.0]#, 8.0]
+cfl_safety_exact = 3.0
+
+#cfl_safety_adaptive = 0.28 * (2 * order + 1)
+#cfl_safety_scaled = [10.0, 10.0]
+#cfl_safety_cfd = [40.0, 40.0, 35.0, 20.0, 10.0, 5.0]
+
 
 """
+Re = 1e4
 t_runtime = 30.0
 cfl_safeties = 6.0
 cfl_safety_adaptive = 0.36 * 5
 cfl_safety_exact = 2.0
 cfl_safety_scaled = [6.0, 6.0]
 cfl_safety_cfd = [40.0, 40.0]
-Re = 1e4
+
 """
 
 viscosity = 1/Re
@@ -2838,8 +2896,8 @@ def fno_forcing_cfd(grid, dx, dy, scale, offsets=None):
 
 	ff_x = lambda x, y, t: np.cos(2 * PI * (x + dx/2 + y))
 	ff_y = lambda x, y, t: np.sin(2 * PI * (x + y + dy/2))
-	x_term = inner_prod_with_legendre(nx, ny, Lx, Ly, 0, ff_x, 0.0, n = 8)[...,0] / (dx * dy)
-	y_term = inner_prod_with_legendre(nx, ny, Lx, Ly, 0, ff_y, 0.0, n = 8)[...,0] / (dx * dy)
+	x_term = inner_prod_with_legendre(nx, ny, Lx, Ly, 0, ff_x, 0.0, n = 10)[...,0] / (dx * dy)
+	y_term = inner_prod_with_legendre(nx, ny, Lx, Ly, 0, ff_y, 0.0, n = 10)[...,0] / (dx * dy)
 
 
 	u = scale / (2 * PI) * grids.GridArray( x_term, offsets[0], grid)
@@ -2965,7 +3023,7 @@ def concatenate_vorticity(v0, trajectory):
 
 def get_forcing_FNO(order, nx, ny):
 	ff = lambda x, y, t: -forcing_coefficient * (np.sin( 2 * np.pi * (x + y) ) + np.cos( 2 * np.pi * (x + y) ))
-	y_term = inner_prod_with_legendre(nx, ny, Lx, Ly, order, ff, 0.0, n = 8)
+	y_term = inner_prod_with_legendre(nx, ny, Lx, Ly, order, ff, 0.0, n = 10)
 	return lambda zeta: y_term
 
 def get_inner_steps_dt_DG(nx, ny, order, cfl_safety, T):
@@ -3062,7 +3120,7 @@ def print_runtime():
 	for i, nx in enumerate(nxs_dg):
 		ny = nx
 
-		a_i = convert_DG_representation(a0, order, 0, nx, ny, Lx, Ly, n=8)
+		a_i = convert_DG_representation(a0, order, 0, nx, ny, Lx, Ly, n=10)
 
 		step_fn = get_dg_step_fn(nx, ny, order, t_runtime, cfl_safety = cfl_safeties[i])
 		rollout_fn = get_trajectory_fn(step_fn, 1)
@@ -3100,7 +3158,7 @@ def print_runtime_adaptive():
 	for nx in nxs_dg:
 		ny = nx
 
-		a_i = convert_DG_representation(a0, order, 0, nx, ny, Lx, Ly, n=8)
+		a_i = convert_DG_representation(a0, order, 0, nx, ny, Lx, Ly, n=10)
 
 		f_poisson_bracket = get_poisson_bracket(order, flux)
 		f_poisson_solve = get_poisson_solver(nx, ny, Lx, Ly, order)
@@ -3120,14 +3178,14 @@ def print_runtime_adaptive():
 		rollout_fn_adaptive = get_trajectory_fn_adaptive(adaptive_step_fn, dt_fn, t_runtime, 1, f_poisson_solve)
 
 		a0 = get_initial_condition_FNO()
-		a_i = convert_DG_representation(a0, order, 0, nx, ny, Lx, Ly, n=8)
+		a_i = convert_DG_representation(a0, order, 0, nx, ny, Lx, Ly, n=10)
 
 		a_final = rollout_fn_adaptive(a_i)
 		a_final.block_until_ready()
 		times = onp.zeros(N_compute_runtime)
 		for n in range(N_compute_runtime):
 			a0 = get_initial_condition_FNO()
-			a_i = convert_DG_representation(a0, order, 0, nx, ny, Lx, Ly, n=8)
+			a_i = convert_DG_representation(a0, order, 0, nx, ny, Lx, Ly, n=10)
 
 			t1 = time()
 			a_final = rollout_fn_adaptive(a_i)
@@ -3148,7 +3206,7 @@ def print_runtime_scaled():
 	for nx in nxs_dg:
 		ny = nx
 
-		a_i = convert_DG_representation(a0, order, 0, nx, ny, Lx, Ly, n=8)
+		a_i = convert_DG_representation(a0, order, 0, nx, ny, Lx, Ly, n=10)
 
 		@jax.jit
 		def rollout_fn(a0):
@@ -3182,7 +3240,7 @@ def print_errors():
 	for _ in range(N_test):
 		a0 = get_initial_condition_FNO()
 
-		a_i = convert_DG_representation(a0, order_exact, 0, nx_exact, ny_exact, Lx, Ly, n=8)
+		a_i = convert_DG_representation(a0, order_exact, 0, nx_exact, ny_exact, Lx, Ly, n=10)
 		exact_step_fn = get_dg_step_fn(nx_exact, ny_exact, order_exact, t_chunk, cfl_safety = cfl_safety_exact)
 		exact_rollout_fn = get_trajectory_fn(exact_step_fn, outer_steps)
 		exact_trajectory = exact_rollout_fn(a_i)
@@ -3196,7 +3254,7 @@ def print_errors():
 		for n, nx in enumerate(nxs_dg):
 			ny = nx
 
-			a_i = convert_DG_representation(a0, order, 0, nx, ny, Lx, Ly, n=8)
+			a_i = convert_DG_representation(a0, order, 0, nx, ny, Lx, Ly, n=10)
 			step_fn = get_dg_step_fn(nx, ny, order, t_chunk, cfl_safety = cfl_safeties[n])
 			rollout_fn = get_trajectory_fn(step_fn, outer_steps)
 			trajectory = rollout_fn(a_i)
@@ -3207,7 +3265,7 @@ def print_errors():
 				raise Exception
 
 			for j in range(outer_steps+1):
-				a_ex = convert_DG_representation(exact_trajectory[j], order, order_exact, nx, ny, Lx, Ly, n=8)
+				a_ex = convert_DG_representation(exact_trajectory[j], order, order_exact, nx, ny, Lx, Ly, n=10)
 				errors[n, j] += compute_percent_error(trajectory[j], a_ex) / N_test
 
 
@@ -3222,7 +3280,7 @@ def print_errors_adaptive():
 
 	for _ in range(N_test):
 		a0 = get_initial_condition_FNO()
-		a_i = convert_DG_representation(a0, order_exact, 0, nx_exact, ny_exact, Lx, Ly, n=8)
+		a_i = convert_DG_representation(a0, order_exact, 0, nx_exact, ny_exact, Lx, Ly, n=10)
 		
 		exact_step_fn = get_dg_step_fn(nx_exact, ny_exact, order_exact, t_chunk, cfl_safety = cfl_safety_exact)
 		exact_rollout_fn = get_trajectory_fn(exact_step_fn, outer_steps)
@@ -3237,7 +3295,7 @@ def print_errors_adaptive():
 		for n, nx in enumerate(nxs_dg):
 			ny = nx
 
-			a_i = convert_DG_representation(a0, order, 0, nx, ny, Lx, Ly, n=8)
+			a_i = convert_DG_representation(a0, order, 0, nx, ny, Lx, Ly, n=10)
 
 			f_poisson_bracket = get_poisson_bracket(order, flux)
 			f_poisson_solve = get_poisson_solver(nx, ny, Lx, Ly, order)
@@ -3264,7 +3322,7 @@ def print_errors_adaptive():
 				raise Exception
 
 			for j in range(outer_steps+1):
-				a_ex = convert_DG_representation(exact_trajectory[j], order, order_exact, nx, ny, Lx, Ly, n=8)
+				a_ex = convert_DG_representation(exact_trajectory[j], order, order_exact, nx, ny, Lx, Ly, n=10)
 				errors[n, j] += compute_percent_error(trajectory[j], a_ex) / N_test
 
 
@@ -3280,7 +3338,7 @@ def print_errors_scaled():
 	for _ in range(N_test):
 		a0 = get_initial_condition_FNO()
 
-		a_i = convert_DG_representation(a0, order_exact, 0, nx_exact, ny_exact, Lx, Ly, n=8)
+		a_i = convert_DG_representation(a0, order_exact, 0, nx_exact, ny_exact, Lx, Ly, n=10)
 		exact_step_fn = get_dg_step_fn(nx_exact, ny_exact, order_exact, t_chunk, cfl_safety = cfl_safety_exact)
 		exact_rollout_fn = get_trajectory_fn(exact_step_fn, outer_steps)
 		exact_trajectory = exact_rollout_fn(a_i)
@@ -3294,7 +3352,7 @@ def print_errors_scaled():
 		for n, nx in enumerate(nxs_dg):
 			ny = nx
 
-			a_i = convert_DG_representation(a0, order, 0, nx, ny, Lx, Ly, n=8)
+			a_i = convert_DG_representation(a0, order, 0, nx, ny, Lx, Ly, n=10)
 			step_fn_one = get_dg_step_fn(nx, ny, order, t_chunk/2, cfl_safety=cfl_safety_scaled[0])
 			step_fn_two = get_dg_step_fn(nx, ny, order, t_chunk/2, cfl_safety=cfl_safety_scaled[1])
 
@@ -3313,7 +3371,7 @@ def print_errors_scaled():
 				raise Exception
 
 			for j in range(outer_steps+1):
-				a_ex = convert_DG_representation(exact_trajectory[j], order, order_exact, nx, ny, Lx, Ly, n=8)
+				a_ex = convert_DG_representation(exact_trajectory[j], order, order_exact, nx, ny, Lx, Ly, n=10)
 				errors[n, j] += compute_percent_error(trajectory[j], a_ex) / N_test
 	print("nxs: {}".format(nxs_dg))
 	print("Mean errors: {}".format(np.mean(errors, axis=-1)))
@@ -3430,7 +3488,7 @@ v0_fno = get_initial_condition_FNO()
 nx_dg = 16
 ny_dg = 16
 
-a_i = convert_DG_representation(v0_fno, order, 0, nx_dg, ny_dg, Lx, Ly, n=8)
+a_i = convert_DG_representation(v0_fno, order, 0, nx_dg, ny_dg, Lx, Ly, n=10)
 step_fn = get_dg_step_fn(nx_dg, ny_dg, order, 3.0, cfl_safety = cfl_safeties[0])
 rollout_fn = get_trajectory_fn(step_fn, 3)
 traj = rollout_fn(-a_i)
