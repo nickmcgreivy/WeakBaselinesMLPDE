@@ -1,11 +1,12 @@
 import sys
 sys.path.append("../core")
 sys.path.append("../simulate")
+sys.path.append("../core/dg")
 
 import jax
 import jax.numpy as jnp
 import numpy as onp
-from jax import config, vmap
+from jax import config, vmap, jit
 
 config.update("jax_enable_x64", True)
 import xarray
@@ -14,6 +15,7 @@ import matplotlib.pyplot as plt
 
 
 from flux import Flux
+from fluxdg import Flux as FluxDG
 from initialconditions import (
     get_a0,
     get_initial_condition_fn,
@@ -25,7 +27,8 @@ from legendre import generate_legendre
 from simulations import BurgersFVSim
 from trajectory import get_trajectory_fn, get_inner_fn
 from helper import convert_FV_representation
-
+from helperdg import convert_DG_representation
+from simulator import simulate_1D
 
 
 def plot_fv(a, core_params, color="blue"):
@@ -37,7 +40,10 @@ def plot_fv_trajectory(trajectory, core_params, t_inner, color="blue"):
 
 
 def plot_dg(a, core_params, color="blue"):
-    p = 1
+    if len(a.shape) == 1:
+        p = 1
+    else:
+        p = a.shape[-1]
 
     def evalf(x, a, j, dx, leg_poly):
         x_j = dx * (0.5 + j)
@@ -162,12 +168,11 @@ t_warmup = 5.0
 
 nx_exact = 512
 nxs = [16, 32, 64, 128, 256]
+nxs_dg = [16, 32, 64, 128]
 BASEBATCHSIZE = 128
 
 omega_max = 0.4
 nu = 0.01
-lr = 3e-3
-optimizer = "adam"
 
 key = jax.random.PRNGKey(13)
 
@@ -230,13 +235,15 @@ key = jax.random.PRNGKey(43)
 
 
 
-N = 5
+N = 1
 
 mae_weno = onp.zeros(len(nxs))
 mae_god = onp.zeros(len(nxs))
 mae_weno_bad = onp.zeros(len(nxs))
 mae_god_bad = onp.zeros(len(nxs))
 mae_zeros = onp.zeros(len(nxs))
+
+mae_dg = onp.zeros(len(nxs_dg))
 
 
 def mae_loss(v, v_ex):
@@ -258,7 +265,7 @@ for n in range(N):
     key, key1, key2 = jax.random.split(key, 3)
 
     f_init = get_initial_condition_fn(
-        core_params_weno, "zeros", key=key1, **kwargs_init
+        core_params_weno, init_description, key=key1, **kwargs_init
     )
     f_forcing = forcing_fn(key2)
 
@@ -283,6 +290,7 @@ for n in range(N):
     # exact trajectory
     trajectory_exact, _ = trajectory_fn_weno(x0_exact)
 
+    """
     for i, nx in enumerate(nxs):
         print(nx)
         a0 = convert_FV_representation(a0_exact, nx, core_params_weno.Lx)
@@ -321,6 +329,67 @@ for n in range(N):
         mae_zeros[i] += (
             mae_loss(jnp.zeros(trajectory_exact_ds.shape), trajectory_exact_ds) / N
         )
+    """
+
+    ##### DG error for different resolution
+    Lx = core_params_weno.Lx
+    p_dg = 3
+    leg_poly = generate_legendre(p_dg)
+    cfl_safety = 0.3
+
+    for i, nx in enumerate(nxs_dg):
+        print("dg: nx={}".format(nx))
+
+        a0_dg = convert_DG_representation(a0_exact[:,None], p_dg, nx, (Lx / nx), (Lx / nx_exact), generate_legendre(1))
+        trajectory_exact_dg = vmap(lambda a0: convert_DG_representation(a0[:,None], p_dg, nx, (Lx / nx), (Lx / nx_exact), generate_legendre(1)))(trajectory_exact)
+        print(trajectory_exact_dg.shape)
+
+        trajectory_dg = a0_dg[None]
+        a = a0_dg
+        t = t0
+        dx = Lx / nx
+
+        dt_i = cfl_safety * dx / (2 * p_dg - 1)
+        nt = int(t_inner / dt_i)
+        dt = t_inner / nt
+
+        sim_f = jit(lambda a, t: simulate_1D(
+                a,
+                t,
+                p_dg,
+                FluxDG.GODUNOV,
+                nx,
+                dx,
+                dt,
+                leg_poly,
+                nt,
+                forcing_func=f_forcing,
+                nu=nu,
+                output=False,
+            ))
+
+        for i in range(outer_steps-1):
+            a, t = sim_f(a,t)
+            trajectory_dg = jnp.concatenate((trajectory_dg, a[None]),axis=0)
+
+
+        plot_dg(trajectory_exact[0], core_params_weno, color="blue")
+        plot_dg(trajectory_exact_dg[0], core_params_weno, color="red")
+        plot_dg(trajectory_dg[0], core_params_weno, color="green")
+        plt.show()
+
+        plot_dg(trajectory_exact[5], core_params_weno, color="blue")
+        plot_dg(trajectory_exact_dg[5], core_params_weno, color="red")
+        plot_dg(trajectory_dg[5], core_params_weno, color="green")
+        plt.show()
+
+
+
+
+
+
+
+"""
 
 maes = jnp.asarray(
     [
@@ -389,8 +458,6 @@ for k, mae in enumerate(maes):
         markersize=markersize[k],
         marker=markers[k],
     )
-    # plt.plot(nxs_rev, mae, color=colors[k], markersize=12, marker=markers[k], label = labels[k])
-
 
 
 axs.set_xticks([16, 32, 64, 128, 256])
@@ -424,3 +491,4 @@ fig.tight_layout()
 
 
 plt.show()
+"""
