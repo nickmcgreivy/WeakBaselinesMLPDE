@@ -61,6 +61,8 @@ def sparse_solve_transpose(ct, b, sparse_data, sparse_indices, size, forward=Tru
 #########
 # JIT
 #########
+import sys
+sys.path.append("../..")
 
 import custom_call_sparse_solve_ldlt as custom_call_sparse_solve
 
