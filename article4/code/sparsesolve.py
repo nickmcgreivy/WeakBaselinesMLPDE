@@ -64,7 +64,7 @@ def sparse_solve_transpose(ct, b, sparse_data, sparse_indices, size, forward=Tru
 import sys
 sys.path.append("../..")
 
-import custom_call_sparse_solve_ldlt as custom_call_sparse_solve
+import custom_call_sparse_solve as custom_call_sparse_solve
 
 for _name, _value in custom_call_sparse_solve.registrations().items():
     xla_client.register_cpu_custom_call_target(_name, _value)
