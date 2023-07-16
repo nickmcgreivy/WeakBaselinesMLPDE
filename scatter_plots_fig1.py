@@ -60,9 +60,9 @@ n_red_A1 = 58
 n_grey_A1 = 5
 n_green_A1 = 15
 
-n_red_A2 = 11
+n_red_A2 = 10
 n_grey_A2 = 8
-n_green_A2 = 59
+n_green_A2 = 60
 
 n_red_A3 = 0
 n_grey_A3 = 0
