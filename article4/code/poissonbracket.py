@@ -47,17 +47,17 @@ config.update("jax_enable_x64", True)
 @lru_cache(maxsize=4)
 def load_poisson_volume(order):
     if os.path.exists(
-        "../../poissonmatrices/poisson_bracket_volume_{}.npy".format(order)
+        "../poissonmatrices/poisson_bracket_volume_{}.npy".format(order)
     ):
         V = onp.load(
-            "../../poissonmatrices/poisson_bracket_volume_{}.npy".format(
+            "../poissonmatrices/poisson_bracket_volume_{}.npy".format(
                 order
             )
         )
     else:
         V = create_poisson_bracket_volume_matrix(order)
         onp.save(
-            "../../poissonmatrices/poisson_bracket_volume_{}.npy".format(
+            "../poissonmatrices/poisson_bracket_volume_{}.npy".format(
                 order
             ),
             V,
@@ -68,19 +68,19 @@ def load_poisson_volume(order):
 @lru_cache(maxsize=4)
 def load_boundary_matrix_centered(order):
     if os.path.exists(
-        "../../poissonmatrices/poisson_bracket_boundary_centered_{}.npy".format(
+        "../poissonmatrices/poisson_bracket_boundary_centered_{}.npy".format(
             order
         )
     ):
         B = onp.load(
-            "../../poissonmatrices/poisson_bracket_boundary_centered_{}.npy".format(
+            "../poissonmatrices/poisson_bracket_boundary_centered_{}.npy".format(
                 order
             )
         )
     else:
         B = create_poisson_bracket_boundary_matrix_centered(order)
         onp.save(
-            "../../poissonmatrices/poisson_bracket_boundary_centered_{}.npy".format(
+            "../poissonmatrices/poisson_bracket_boundary_centered_{}.npy".format(
                 order
             ),
             B,
@@ -91,19 +91,19 @@ def load_boundary_matrix_centered(order):
 @lru_cache(maxsize=4)
 def load_boundary_matrix_upwind(order):
     if os.path.exists(
-        "../../poissonmatrices/poisson_bracket_boundary_upwind_{}.npy".format(
+        "../poissonmatrices/poisson_bracket_boundary_upwind_{}.npy".format(
             order
         )
     ):
         B = onp.load(
-            "../../poissonmatrices/poisson_bracket_boundary_upwind_{}.npy".format(
+            "../poissonmatrices/poisson_bracket_boundary_upwind_{}.npy".format(
                 order
             )
         )
     else:
         B = create_poisson_bracket_boundary_matrix_upwind(order)
         onp.save(
-            "../../poissonmatrices/poisson_bracket_boundary_upwind_{}.npy".format(
+            "../poissonmatrices/poisson_bracket_boundary_upwind_{}.npy".format(
                 order
             ),
             B,
@@ -113,15 +113,15 @@ def load_boundary_matrix_upwind(order):
 
 def load_alpha_right_matrix_twice(order):
     if os.path.exists(
-        "../../poissonmatrices/alpha_right_matrix_{}.npy".format(order)
+        "../poissonmatrices/alpha_right_matrix_{}.npy".format(order)
     ):
         R = onp.load(
-            "../../poissonmatrices/alpha_right_matrix_{}.npy".format(order)
+            "../poissonmatrices/alpha_right_matrix_{}.npy".format(order)
         )
     else:
         R = alpha_right_matrix_twice(order)
         onp.save(
-            "../../poissonmatrices/alpha_right_matrix_{}.npy".format(order),
+            "../poissonmatrices/alpha_right_matrix_{}.npy".format(order),
             R,
         )
     return R
@@ -129,15 +129,15 @@ def load_alpha_right_matrix_twice(order):
 
 def load_alpha_top_matrix_twice(order):
     if os.path.exists(
-        "../../poissonmatrices/alpha_top_matrix_{}.npy".format(order)
+        "../poissonmatrices/alpha_top_matrix_{}.npy".format(order)
     ):
         T = onp.load(
-            "../../poissonmatrices/alpha_top_matrix_{}.npy".format(order)
+            "../poissonmatrices/alpha_top_matrix_{}.npy".format(order)
         )
     else:
         T = alpha_top_matrix_twice(order)
         onp.save(
-            "../../poissonmatrices/alpha_top_matrix_{}.npy".format(order),
+            "../poissonmatrices/alpha_top_matrix_{}.npy".format(order),
             T,
         )
     return T
@@ -145,17 +145,17 @@ def load_alpha_top_matrix_twice(order):
 
 def load_zeta_right_minus_matrix_twice(order):
     if os.path.exists(
-        "../../poissonmatrices/zeta_right_minus_matrix_{}.npy".format(order)
+        "../poissonmatrices/zeta_right_minus_matrix_{}.npy".format(order)
     ):
         Rm = onp.load(
-            "../../poissonmatrices/zeta_right_minus_matrix_{}.npy".format(
+            "../poissonmatrices/zeta_right_minus_matrix_{}.npy".format(
                 order
             )
         )
     else:
         Rm = zeta_right_minus_matrix_twice(order)
         onp.save(
-            "../../poissonmatrices/zeta_right_minus_matrix_{}.npy".format(
+            "../poissonmatrices/zeta_right_minus_matrix_{}.npy".format(
                 order
             ),
             Rm,
@@ -165,17 +165,17 @@ def load_zeta_right_minus_matrix_twice(order):
 
 def load_zeta_right_plus_matrix_twice(order):
     if os.path.exists(
-        "../../poissonmatrices/zeta_right_plus_matrix_{}.npy".format(order)
+        "../poissonmatrices/zeta_right_plus_matrix_{}.npy".format(order)
     ):
         Rp = onp.load(
-            "../../poissonmatrices/zeta_right_plus_matrix_{}.npy".format(
+            "../poissonmatrices/zeta_right_plus_matrix_{}.npy".format(
                 order
             )
         )
     else:
         Rp = zeta_right_plus_matrix_twice(order)
         onp.save(
-            "../../poissonmatrices/zeta_right_plus_matrix_{}.npy".format(
+            "../poissonmatrices/zeta_right_plus_matrix_{}.npy".format(
                 order
             ),
             Rp,
@@ -185,17 +185,17 @@ def load_zeta_right_plus_matrix_twice(order):
 
 def load_zeta_top_minus_matrix_twice(order):
     if os.path.exists(
-        "../../poissonmatrices/zeta_top_minus_matrix_{}.npy".format(order)
+        "../poissonmatrices/zeta_top_minus_matrix_{}.npy".format(order)
     ):
         Tm = onp.load(
-            "../../poissonmatrices/zeta_top_minus_matrix_{}.npy".format(
+            "../poissonmatrices/zeta_top_minus_matrix_{}.npy".format(
                 order
             )
         )
     else:
         Tm = zeta_top_minus_matrix_twice(order)
         onp.save(
-            "../../poissonmatrices/zeta_top_minus_matrix_{}.npy".format(
+            "../poissonmatrices/zeta_top_minus_matrix_{}.npy".format(
                 order
             ),
             Tm,
@@ -205,15 +205,15 @@ def load_zeta_top_minus_matrix_twice(order):
 
 def load_zeta_top_plus_matrix_twice(order):
     if os.path.exists(
-        "../../poissonmatrices/zeta_top_plus_matrix_{}.npy".format(order)
+        "../poissonmatrices/zeta_top_plus_matrix_{}.npy".format(order)
     ):
         Tp = onp.load(
-            "../../poissonmatrices/zeta_top_plus_matrix_{}.npy".format(order)
+            "../poissonmatrices/zeta_top_plus_matrix_{}.npy".format(order)
         )
     else:
         Tp = zeta_top_plus_matrix_twice(order)
         onp.save(
-            "../../poissonmatrices/zeta_top_plus_matrix_{}.npy".format(
+            "../poissonmatrices/zeta_top_plus_matrix_{}.npy".format(
                 order
             ),
             Tp,
@@ -223,17 +223,17 @@ def load_zeta_top_plus_matrix_twice(order):
 
 def load_boundary_matrix_inverse_twice(order):
     if os.path.exists(
-        "../../poissonmatrices/boundary_matrix_inverse_{}.npy".format(order)
+        "../poissonmatrices/boundary_matrix_inverse_{}.npy".format(order)
     ):
         P_inv = onp.load(
-            "../../poissonmatrices/boundary_matrix_inverse_{}.npy".format(
+            "../poissonmatrices/boundary_matrix_inverse_{}.npy".format(
                 order
             )
         )
     else:
         P_inv = boundary_matrix_inverse_twice(order)
         onp.save(
-            "../../poissonmatrices/boundary_matrix_inverse_{}.npy".format(
+            "../poissonmatrices/boundary_matrix_inverse_{}.npy".format(
                 order
             ),
             P_inv,
@@ -243,19 +243,19 @@ def load_boundary_matrix_inverse_twice(order):
 
 def load_legendre_boundary_inner_product(order):
     if os.path.exists(
-        "../../poissonmatrices/legendre_boundary_inner_product_{}.npy".format(
+        "../poissonmatrices/legendre_boundary_inner_product_{}.npy".format(
             order
         )
     ):
         boundary_ip = onp.load(
-            "../../poissonmatrices/legendre_boundary_inner_product_{}.npy".format(
+            "../poissonmatrices/legendre_boundary_inner_product_{}.npy".format(
                 order
             )
         )
     else:
         boundary_ip = legendre_boundary_inner_product(order)
         onp.save(
-            "../../poissonmatrices/legendre_boundary_inner_product_{}.npy".format(
+            "../poissonmatrices/legendre_boundary_inner_product_{}.npy".format(
                 order
             ),
             boundary_ip,
@@ -265,52 +265,52 @@ def load_legendre_boundary_inner_product(order):
 
 def load_change_basis_boundary_to_volume(order):
     if os.path.exists(
-        "../../poissonmatrices/change_basis_boundary_to_volume_CB_R_{}.npy".format(
+        "../poissonmatrices/change_basis_boundary_to_volume_CB_R_{}.npy".format(
             order
         )
     ):
         CB_R = onp.load(
-            "../../poissonmatrices/change_basis_boundary_to_volume_CB_R_{}.npy".format(
+            "../poissonmatrices/change_basis_boundary_to_volume_CB_R_{}.npy".format(
                 order
             )
         )
         CB_T = onp.load(
-            "../../poissonmatrices/change_basis_boundary_to_volume_CB_T_{}.npy".format(
+            "../poissonmatrices/change_basis_boundary_to_volume_CB_T_{}.npy".format(
                 order
             )
         )
         CB_L = onp.load(
-            "../../poissonmatrices/change_basis_boundary_to_volume_CB_L_{}.npy".format(
+            "../poissonmatrices/change_basis_boundary_to_volume_CB_L_{}.npy".format(
                 order
             )
         )
         CB_B = onp.load(
-            "../../poissonmatrices/change_basis_boundary_to_volume_CB_B_{}.npy".format(
+            "../poissonmatrices/change_basis_boundary_to_volume_CB_B_{}.npy".format(
                 order
             )
         )
     else:
         CB_R, CB_T, CB_L, CB_B = change_basis_boundary_to_volume(order)
         onp.save(
-            "../../poissonmatrices/change_basis_boundary_to_volume_CB_R_{}.npy".format(
+            "../poissonmatrices/change_basis_boundary_to_volume_CB_R_{}.npy".format(
                 order
             ),
             CB_R,
         )
         onp.save(
-            "../../poissonmatrices/change_basis_boundary_to_volume_CB_T_{}.npy".format(
+            "../poissonmatrices/change_basis_boundary_to_volume_CB_T_{}.npy".format(
                 order
             ),
             CB_T,
         )
         onp.save(
-            "../../poissonmatrices/change_basis_boundary_to_volume_CB_L_{}.npy".format(
+            "../poissonmatrices/change_basis_boundary_to_volume_CB_L_{}.npy".format(
                 order
             ),
             CB_L,
         )
         onp.save(
-            "../../poissonmatrices/change_basis_boundary_to_volume_CB_B_{}.npy".format(
+            "../poissonmatrices/change_basis_boundary_to_volume_CB_B_{}.npy".format(
                 order
             ),
             CB_B,
@@ -320,17 +320,17 @@ def load_change_basis_boundary_to_volume(order):
 
 def load_change_legendre_points_twice(order):
     if os.path.exists(
-        "../../poissonmatrices/change_legendre_points_{}.npy".format(order)
+        "../poissonmatrices/change_legendre_points_{}.npy".format(order)
     ):
         LP = onp.load(
-            "../../poissonmatrices/change_legendre_points_{}.npy".format(
+            "../poissonmatrices/change_legendre_points_{}.npy".format(
                 order
             )
         )
     else:
         LP = change_legendre_points_twice(order)
         onp.save(
-            "../../poissonmatrices/change_legendre_points_{}.npy".format(
+            "../poissonmatrices/change_legendre_points_{}.npy".format(
                 order
             ),
             LP,

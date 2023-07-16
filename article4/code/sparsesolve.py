@@ -1,3 +1,5 @@
+import sys
+sys.path.append("..")
 import jax
 from jax import lax, core, config, xla, jit, grad, vmap
 from jax._src import api, abstract_arrays
@@ -61,8 +63,6 @@ def sparse_solve_transpose(ct, b, sparse_data, sparse_indices, size, forward=Tru
 #########
 # JIT
 #########
-import sys
-sys.path.append("../..")
 
 import custom_call_sparse_solve as custom_call_sparse_solve
 

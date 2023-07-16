@@ -206,8 +206,8 @@ def get_dg_step_fn(args, nx, ny, order, T):
     else:
         flux = Flux.UPWIND
     
-    f_poisson_bracket = get_poisson_bracket(args.poisson_dir, order, flux)
-    f_poisson_solve = get_poisson_solver(args.poisson_dir, nx, ny, Lx, Ly, order)
+    f_poisson_bracket = get_poisson_bracket(order, flux)
+    f_poisson_solve = get_poisson_solver(nx, ny, Lx, Ly, order)
     f_phi = lambda zeta, t: f_poisson_solve(zeta)
     f_diffusion = get_diffusion_func(order, Lx, Ly, viscosity)
     f_forcing_sim = get_forcing_dg(order, nx, ny)

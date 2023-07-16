@@ -199,41 +199,41 @@ def load_assembly_matrix(nx, ny, order):
         return num_global_elements, M, T
 
     if os.path.exists(
-        "../../poissonmatrices/assembly_matrix_nx{}_ny{}_order{}.npy".format(
+        "../poissonmatrices/assembly_matrix_nx{}_ny{}_order{}.npy".format(
             nx, ny, order
         )
     ):
         num_global_elements = np.load(
-            "../../poissonmatrices/num_global_elements_nx{}_ny{}_order{}.npy".format(
+            "../poissonmatrices/num_global_elements_nx{}_ny{}_order{}.npy".format(
                 nx, ny, order
             )
         )
         M = np.load(
-            "../../poissonmatrices/assembly_matrix_nx{}_ny{}_order{}.npy".format(
+            "../poissonmatrices/assembly_matrix_nx{}_ny{}_order{}.npy".format(
                 nx, ny, order
             )
         )
         T = np.load(
-            "../../poissonmatrices/assembly_matrix_transpose_nx{}_ny{}_order{}.npy".format(
+            "../poissonmatrices/assembly_matrix_transpose_nx{}_ny{}_order{}.npy".format(
                 nx, ny, order
             )
         )
     else:
         num_global_elements, M, T = create_assembly_matrix(nx, ny, order)
         np.save(
-            "../../poissonmatrices/num_global_elements_nx{}_ny{}_order{}.npy".format(
+            "../poissonmatrices/num_global_elements_nx{}_ny{}_order{}.npy".format(
                 nx, ny, order
             ),
             num_global_elements,
         )
         np.save(
-            "../../poissonmatrices/assembly_matrix_nx{}_ny{}_order{}.npy".format(
+            "../poissonmatrices/assembly_matrix_nx{}_ny{}_order{}.npy".format(
                 nx, ny, order
             ),
             M,
         )
         np.save(
-            "../../poissonmatrices/assembly_matrix_transpose_nx{}_ny{}_order{}.npy".format(
+            "../poissonmatrices/assembly_matrix_transpose_nx{}_ny{}_order{}.npy".format(
                 nx, ny, order
             ),
             T,
@@ -267,22 +267,22 @@ def load_elementwise_volume(nx, ny, Lx, Ly, order):
     dx = Lx / nx
     dy = Ly / ny
     if os.path.exists(
-        "../../poissonmatrices/elementwise_volume_{}_1.npy".format(order)
+        "../poissonmatrices/elementwise_volume_{}_1.npy".format(order)
     ):
         res1 = np.load(
-            "../../poissonmatrices/elementwise_volume_{}_1.npy".format(order)
+            "../poissonmatrices/elementwise_volume_{}_1.npy".format(order)
         )
         res2 = np.load(
-            "../../poissonmatrices/elementwise_volume_{}_2.npy".format(order)
+            "../poissonmatrices/elementwise_volume_{}_2.npy".format(order)
         )
     else:
         res1, res2 = create_elementwise_volume(order)
         np.save(
-            "../../poissonmatrices/elementwise_volume_{}_1".format(order),
+            "../poissonmatrices/elementwise_volume_{}_1".format(order),
             res1,
         )
         np.save(
-            "../../poissonmatrices/elementwise_volume_{}_2".format(order),
+            "../poissonmatrices/elementwise_volume_{}_2".format(order),
             res2,
         )
     V = res1 * (dy / dx) + res2 * (dx / dy)
@@ -303,15 +303,15 @@ def load_elementwise_source(nx, ny, Lx, Ly, order):
     dx = Lx / nx
     dy = Ly / ny
     if os.path.exists(
-        "../../poissonmatrices/elementwise_source_{}.npy".format(order)
+        "../poissonmatrices/elementwise_source_{}.npy".format(order)
     ):
         res = np.load(
-            "../../poissonmatrices/elementwise_source_{}.npy".format(order)
+            "../poissonmatrices/elementwise_source_{}.npy".format(order)
         )
     else:
         res = write_elementwise_source(order)
         np.save(
-            "../../poissonmatrices/elementwise_source_{}.npy".format(order),
+            "../poissonmatrices/elementwise_source_{}.npy".format(order),
             res,
         )
     return res * dx * dy / 4
@@ -319,16 +319,16 @@ def load_elementwise_source(nx, ny, Lx, Ly, order):
 
 def load_volume_matrix(nx, ny, Lx, Ly, order, M, num_global_elements):
     if os.path.exists(
-        "../../poissonmatrices/volume_{}_{}_{}.npz".format(nx, ny, order)
+        "../poissonmatrices/volume_{}_{}_{}.npz".format(nx, ny, order)
     ):
         sV = sparse.load_npz(
-            "../../poissonmatrices/volume_{}_{}_{}.npz".format(nx, ny, order)
+            "../poissonmatrices/volume_{}_{}_{}.npz".format(nx, ny, order)
         )
     else:
         V = create_volume_matrix(nx, ny, Lx, Ly, order, M, num_global_elements)
         sV = sparse.csr_matrix(V)
         sparse.save_npz(
-            "../../poissonmatrices/volume_{}_{}_{}.npz".format(
+            "../poissonmatrices/volume_{}_{}_{}.npz".format(
                 nx, ny, order
             ),
             sV,
@@ -406,7 +406,7 @@ def get_kernel(order):
 ######
 
 
-def get_poisson_solver(basedir, nx, ny, Lx, Ly, order):
+def get_poisson_solver(nx, ny, Lx, Ly, order):
     N_global_elements, M, T = load_assembly_matrix(nx, ny, order)
     T = convert_to_bottom_indices(T, order)
     S_elem = load_elementwise_source(nx, ny, Lx, Ly, order)
@@ -456,5 +456,6 @@ def get_poisson_solver(basedir, nx, ny, Lx, Ly, order):
         output = res.at[M].get()
         return output
 
+    jax.jit(solve)(jnp.zeros((nx, ny, num_elements(order))))
 
     return solve

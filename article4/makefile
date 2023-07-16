@@ -1,5 +1,5 @@
-BASEDIR=/Users/nickm/thesis/metareview/pde_runtime_comparisons/2d_navier_stokes
-READWRITE_DIR=/Users/nickm/thesis/metareview/pde_runtime_comparisons/2d_navier_stokes
+BASEDIR=/Users/nickm/thesis/metareview/WeakBaselinesMLPDE/article4
+READWRITE_DIR=/Users/nickm/thesis/metareview/WeakBaselinesMLPDE/article4
 
 POISSON_DIR=$(BASEDIR)
 MAKE_SCRIPT=$(BASEDIR)/scripts/make.mk
