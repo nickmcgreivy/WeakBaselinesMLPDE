@@ -7,10 +7,11 @@ from jax.config import config
 
 config.update("jax_enable_x64", True)
 
-from helperdg import _fixed_quad
 from fluxdg import Flux
 from timederivativedg import time_derivative_DG_1D_burgers
-from rungekuttadg import ssp_rk3, ssp_rk2
+import sys
+sys.path.append("..")
+from rungekutta import ssp_rk3
 
 
 def _scan(sol, x, rk_F):
@@ -39,8 +40,7 @@ def simulate_1D(
     output=False,
     forcing_func=None,
     nu=0.0,
-    rk=ssp_rk3,
-    limit=False
+    rk=ssp_rk3
 ):
 
     dadt = lambda a, t: time_derivative_DG_1D_burgers(
@@ -55,7 +55,7 @@ def simulate_1D(
         nu=nu,
     )
 
-    rk_F = lambda a, t: rk(a, t, dadt, dt, limit=limit)
+    rk_F = lambda a, t: rk(a, t, dadt, dt)
 
 
     if output:

@@ -143,7 +143,9 @@ def get_core_params(Lx=1.0, flux="godunov", nu=0.0):
     return CoreParams(Lx, flux, nu)
 
 
-def get_sim_params(name="test", cfl_safety=0.3, rk="ssp_rk3"):
+cfl_safety = 0.25
+
+def get_sim_params(name="test", cfl_safety=cfl_safety, rk="ssp_rk3"):
     return SimulationParams(name, cfl_safety, rk)
 
 
@@ -161,15 +163,13 @@ def l2_norm_trajectory(trajectory):
 init_description = "zeros"
 simname = "reproduce"
 
-n_runs = 800
-datapoints_per_run = 10
-time_between_datapoints = 0.5
 t_warmup = 5.0
 
 nx_exact = 512
 nxs = [16, 32, 64, 128, 256]
-nxs_dg = [16, 32, 64, 128]
-BASEBATCHSIZE = 128
+nxs_dg = [16, 32, 64, 128, 256]
+nxs_rev = [256, 128, 64, 32, 16]
+nxs_dg_rev = [256, 128, 64, 32, 16]
 
 omega_max = 0.4
 nu = 0.01
@@ -177,7 +177,6 @@ nu = 0.01
 key = jax.random.PRNGKey(13)
 
 delta = False
-diffusion = True
 
 #################
 # END HYPERPARAMS
@@ -199,7 +198,7 @@ kwargs_forcing = {
     "amplitude_max": 0.5,
     "omega_max": omega_max,
 }
-kwargs_sim = {"name": simname, "cfl_safety": 0.3, "rk": "ssp_rk3"}
+kwargs_sim = {"name": simname, "cfl_safety": cfl_safety, "rk": "ssp_rk3"}
 
 kwargs_core_weno = {"Lx": 2 * jnp.pi, "flux": "weno", "nu": nu}
 kwargs_core_god = {"Lx": 2 * jnp.pi, "flux": "godunov", "nu": nu}
@@ -235,15 +234,15 @@ key = jax.random.PRNGKey(43)
 
 
 
-N = 1
+N = 5
 
 mae_weno = onp.zeros(len(nxs))
 mae_god = onp.zeros(len(nxs))
 mae_weno_bad = onp.zeros(len(nxs))
 mae_god_bad = onp.zeros(len(nxs))
 mae_zeros = onp.zeros(len(nxs))
-
-mae_dg = onp.zeros(len(nxs_dg))
+mae_dg2 = onp.zeros(len(nxs))
+mae_dg3 = onp.zeros(len(nxs))
 
 
 def mae_loss(v, v_ex):
@@ -258,6 +257,7 @@ key = jax.random.PRNGKey(16)
 
 
 vmap_convert = vmap(convert_FV_representation, (0, None, None), 0)
+
 
 for n in range(N):
     print(n)
@@ -288,9 +288,9 @@ for n in range(N):
     x0_exact = (a0_exact, t0)
 
     # exact trajectory
-    trajectory_exact, _ = trajectory_fn_weno(x0_exact)
+    trajectory_exact, trajectory_exact_t = trajectory_fn_weno(x0_exact)
 
-    """
+
     for i, nx in enumerate(nxs):
         print(nx)
         a0 = convert_FV_representation(a0_exact, nx, core_params_weno.Lx)
@@ -308,6 +308,7 @@ for n in range(N):
         trajectory_fn = get_trajectory_fn(inner_fn, outer_steps)
         trajectory_god, _ = trajectory_fn(x0)
 
+        
         # Godunov Bad
         step_fn = lambda a, t, dt: sim_god_bad.step_fn(a, t, dt, forcing_func=f_forcing)
         inner_fn = get_inner_fn(step_fn, sim_god_bad.dt_fn, t_inner)
@@ -329,28 +330,31 @@ for n in range(N):
         mae_zeros[i] += (
             mae_loss(jnp.zeros(trajectory_exact_ds.shape), trajectory_exact_ds) / N
         )
-    """
-
-    ##### DG error for different resolution
-    Lx = core_params_weno.Lx
-    p_dg = 3
-    leg_poly = generate_legendre(p_dg)
-    cfl_safety = 0.3
+        
 
     for i, nx in enumerate(nxs_dg):
+        Lx = core_params_weno.Lx
+
+        # p = 3, second-order polynomials
+        p_dg = 3
+        leg_poly = generate_legendre(p_dg)
+        
         print("dg: nx={}".format(nx))
 
         a0_dg = convert_DG_representation(a0_exact[:,None], p_dg, nx, (Lx / nx), (Lx / nx_exact), generate_legendre(1))
         trajectory_exact_dg = vmap(lambda a0: convert_DG_representation(a0[:,None], p_dg, nx, (Lx / nx), (Lx / nx_exact), generate_legendre(1)))(trajectory_exact)
-        print(trajectory_exact_dg.shape)
 
         trajectory_dg = a0_dg[None]
         a = a0_dg
         t = t0
         dx = Lx / nx
 
-        dt_i = cfl_safety * dx / (2 * p_dg - 1)
-        nt = int(t_inner / dt_i)
+        if nx == 256:
+            cfl = 0.1
+        else:
+            cfl = cfl_safety
+        dt_i = cfl * dx / (2 * p_dg - 1)
+        nt = int(t_inner / dt_i) + 1
         dt = t_inner / nt
 
         sim_f = jit(lambda a, t: simulate_1D(
@@ -367,30 +371,62 @@ for n in range(N):
                 nu=nu,
                 output=False,
             ))
-
-        for i in range(outer_steps-1):
+        for _ in range(outer_steps-1):
             a, t = sim_f(a,t)
             trajectory_dg = jnp.concatenate((trajectory_dg, a[None]),axis=0)
 
-
-        plot_dg(trajectory_exact[0], core_params_weno, color="blue")
-        plot_dg(trajectory_exact_dg[0], core_params_weno, color="red")
-        plot_dg(trajectory_dg[0], core_params_weno, color="green")
-        plt.show()
-
-        plot_dg(trajectory_exact[5], core_params_weno, color="blue")
-        plot_dg(trajectory_exact_dg[5], core_params_weno, color="red")
-        plot_dg(trajectory_dg[5], core_params_weno, color="green")
-        plt.show()
+        mae_dg2[i] += mae_loss(trajectory_dg[...,0], trajectory_exact_dg[...,0]) / N
 
 
+        # p = 4, third-order polynomials
+        p_dg = 4
+        leg_poly = generate_legendre(p_dg)
+        
+        print("dg: nx={}".format(nx))
+
+        a0_dg = convert_DG_representation(a0_exact[:,None], p_dg, nx, (Lx / nx), (Lx / nx_exact), generate_legendre(1))
+        trajectory_exact_dg = vmap(lambda a0: convert_DG_representation(a0[:,None], p_dg, nx, (Lx / nx), (Lx / nx_exact), generate_legendre(1)))(trajectory_exact)
+
+        trajectory_dg = a0_dg[None]
+        a = a0_dg
+        t = t0
+        dx = Lx / nx
+
+        if nx == 256:
+            cfl = 0.05
+        elif nx == 128:
+            cfl = 0.1
+        else:
+            cfl = cfl_safety
+        dt_i = cfl * dx / (2 * p_dg - 1)
+        nt = int(t_inner / dt_i) + 1
+        dt = t_inner / nt
+
+        sim_f = jit(lambda a, t: simulate_1D(
+                a,
+                t,
+                p_dg,
+                FluxDG.GODUNOV,
+                nx,
+                dx,
+                dt,
+                leg_poly,
+                nt,
+                forcing_func=f_forcing,
+                nu=nu,
+                output=False,
+            ))
+        for _ in range(outer_steps-1):
+            a, t = sim_f(a,t)
+            trajectory_dg = jnp.concatenate((trajectory_dg, a[None]),axis=0)
+
+        mae_dg3[i] += mae_loss(trajectory_dg[...,0], trajectory_exact_dg[...,0]) / N
 
 
 
 
 
 """
-
 maes = jnp.asarray(
     [
         mae_weno,
@@ -419,7 +455,7 @@ print(maes)
     mae_weno_bad,
     mae_zeros,
 ) = maes
-
+"""
 
 # In[ ]:
 
@@ -428,25 +464,25 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import matplotlib.lines as mlines
 
-nxs_rev = [256, 128, 64, 32, 16]
-
 print(mae_weno)
 print(mae_god)
 print(mae_god_bad)
 print(mae_weno_bad)
 print(mae_zeros)
+print(mae_dg2)
+print(mae_dg3)
 
 fig, axs = plt.subplots(1, 1, figsize=(7, 3.25))
 axs.spines["top"].set_visible(False)
 axs.spines["right"].set_visible(False)
 linewidth = 2
 
-maes = [mae_god, mae_weno]
-labels = ["1st Order", "WENO"]
-colors = ["#1f77b4", "purple"]
-linestyles = ["solid", "solid"]
-markers = ["^", "*"]
-markersize = ["12", "12"]
+maes = [mae_god, mae_weno, mae_dg2, mae_dg3]
+labels = ["1st Order", "WENO", "DG polyOrder2", "DG polyOrder3"]
+colors = ["#1f77b4", "purple", "black", "red"]
+linestyles = ["solid", "solid", "solid", "solid"]
+markers = ["^", "*", "s", "s"]
+markersize = ["12", "12", "8", "8"]
 
 for k, mae in enumerate(maes):
     plt.loglog(
@@ -458,6 +494,7 @@ for k, mae in enumerate(maes):
         markersize=markersize[k],
         marker=markers[k],
     )
+
 
 
 axs.set_xticks([16, 32, 64, 128, 256])
@@ -491,4 +528,3 @@ fig.tight_layout()
 
 
 plt.show()
-"""

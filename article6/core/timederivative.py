@@ -242,9 +242,3 @@ def time_derivative_FV_1D_burgers(core_params, **kwargs):
         return (flux_term + forcing_term + diffusion_term) / dx
 
     return dadt
-
-
-def time_derivative_FV_1D_burgers_train(core_params, model=None, delta=False):
-    return lambda a, t, params, forcing_func: time_derivative_FV_1D_burgers(
-        core_params, model=model, delta=delta, params=params
-    )(a, t, forcing_func=forcing_func)

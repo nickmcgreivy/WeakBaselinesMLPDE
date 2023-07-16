@@ -163,9 +163,7 @@ def time_derivative_DG_1D_burgers(
     dif_flux_term = _diffusion_flux_term_DG_1D_burgers(a, t, p, dx, nu)
     dif_volume_integral = _diffusion_volume_integral_DG_1D_burgers(a, t, p, dx, nu)
     if forcing_func is not None:
-        forcing_term = inner_prod_with_legendre(forcing_func, t, p, nx, dx, leg_poly, n = 8)
+        forcing_term = inner_prod_with_legendre(forcing_func, t, p, nx, dx, leg_poly, n = 10)
     else:
         forcing_term = 0.0
-    return (twokplusone[None, :] / dx) * (
-        flux_term + volume_integral + dif_flux_term + dif_volume_integral + forcing_term
-    )
+    return (twokplusone[None, :] / dx) * (flux_term + volume_integral + dif_flux_term + dif_volume_integral + forcing_term)

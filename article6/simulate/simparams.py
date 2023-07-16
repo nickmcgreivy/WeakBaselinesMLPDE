@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+import sys
+sys.path.append("../core")
 from rungekutta import FUNCTION_MAP
 from flux import Flux
 
