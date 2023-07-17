@@ -6,17 +6,21 @@ This code has been tested with MacOS. While we expect this code and instructions
 
 ## Installation guide
 
-Installation should not take more than a few minutes. First, use GitHub to clone this code by typing `git clone [HTTPS link here]` into command line. Type `cd WeakBaselinesMLPDE` to enter into the directory. Next, type `conda create -n pdeenv python=3.9` and `conda activate pdeenv`. Then, type `pip install pybind11 jax jaxlib sympy h5py scipy tree_math torch matplotlib jax-cfd xarray`. 
-
+Installation should not take more than a few minutes. First, use GitHub to clone this code by typing `git clone [HTTPS link here]` into command line. Type `cd WeakBaselinesMLPDE` to enter into the directory. Next, type
+```
+conda create -n pdeenv python=3.9
+conda activate pdeenv
+pip install pybind11 jax jaxlib sympy h5py scipy tree_math torch matplotlib jax-cfd xarray
+```
 Next, on mac run the following commands. On linux, replace `compilemac` and `compilemacLDLT` with `compilelinux` and `compilelinuxLDLT`. 
-
-`cd generate_sparse_solve
+```
+cd generate_sparse_solve
 tar -xvf eigen-3.4.0.tar.bz2 
 make compilemac
 make compilemacLDLT
 mv custom_call_* ..
-cd ..`
-
+cd ..
+```
 Congratuations, you have compiled and installed all the necessary software to run all the code in this repository.
 
 ## Instructions for use
