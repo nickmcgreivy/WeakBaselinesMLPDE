@@ -21,12 +21,14 @@ label_grey = "Neutral or\nno result"
 plt.rc('font', family='Helvetica')
 marker1 = 'o'
 marker2 = 'h'
+marker3 = 'H'
 size1=100
 size2=100
 fs = 12
 
 kwargs1 = {'marker': marker1, 's': size1}
 kwargs2 = {'marker': marker2, 's': size2}
+kwargs3 = {'marker': marker3, 's': size2}
 
 ax.set_xlim([-8,15+5])
 ax.set_ylim([-14-2.5,14+2.5])
@@ -143,17 +145,17 @@ plt.text(col3_xoffset - 1.1, y_bottom + 0.7, "(c)", horizontalalignment='center'
 
 ax.scatter(x_A1red, y_bottom+y_A1red, **kwargs1, color=color_red, label = label_red)
 ax.scatter(x_A1green, y_bottom+y_A1green, **kwargs2, color=color_green, label = label_green)
-ax.scatter(x_A1grey, y_bottom+y_A1grey, **kwargs1, color=color_grey, label = label_grey)
+ax.scatter(x_A1grey, y_bottom+y_A1grey, **kwargs3, color=color_grey, label = label_grey)
 ax.scatter(x_B1red, y_B1red, **kwargs1, color=color_red)
 
 ax.scatter(x_A2red, y_bottom+y_A2red, **kwargs1, color=color_red)
-ax.scatter(x_A2grey, y_bottom+y_A2grey, **kwargs1, color=color_grey)
+ax.scatter(x_A2grey, y_bottom+y_A2grey, **kwargs3, color=color_grey)
 ax.scatter(x_A2green, y_bottom+y_A2green, **kwargs2, color=color_green)
 ax.scatter(x_B2red, y_B2red, **kwargs1, color=color_red)
 
 ax.scatter(x_A3green, y_bottom+y_A3green, **kwargs2, color=color_green)
 ax.scatter(x_B3red, y_B3red, **kwargs1, color=color_red)
-ax.scatter(x_B3grey, y_B3grey, **kwargs1, color=color_grey)
+ax.scatter(x_B3grey, y_B3grey, **kwargs3, color=color_grey)
 
 fig.legend(loc = (0.0,0.8), fontsize=fs, frameon=False)
 fig.tight_layout()
