@@ -10,7 +10,7 @@ Installation should not take more than a few minutes. First, use GitHub to clone
 ```
 conda create -n pdeenv python=3.9
 conda activate pdeenv
-pip install pybind11 jax jaxlib sympy h5py scipy tree_math torch matplotlib jax-cfd xarray seaborn
+pip install pybind11 jax jaxlib==0.3.25 sympy h5py scipy tree_math torch matplotlib jax-cfd xarray seaborn
 ```
 Next, on mac run the following commands. On linux, replace `compilemac` and `compilemacLDLT` with `compilelinux` and `compilelinuxLDLT`. 
 ```
