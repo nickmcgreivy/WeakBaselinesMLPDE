@@ -2,15 +2,15 @@
 
 ## System requirements
 
-This code has been tested with MacOS. While we expect this code and instructions to work without modification on Linux, we provide no instructions for how to run this code on Windows. We have tested this code on Python v3.7 and v3.9. All required software can be downloaded using open-source package managers and compiled using binaries in this repository.
+This code has been tested with MacOS. While we expect this code and instructions to work without modification on Linux, we provide no instructions for how to run this code on Windows. We have tested this code on Python v3.7. All required software can be downloaded using open-source package managers and compiled using binaries in this repository.
 
 ## Installation guide
 
 Installation should not take more than a few minutes. First, use GitHub to clone this code by typing `git clone [HTTPS link here]` into command line. Type `cd WeakBaselinesMLPDE` to enter into the directory. Next, type
 ```
-conda create -n pdeenv python=3.9
+conda create -n pdeenv python=3.7
 conda activate pdeenv
-pip install pybind11 jax jaxlib==0.3.25 sympy h5py scipy tree_math torch matplotlib jax-cfd xarray seaborn
+pip install pybind11 jax==0.3.25 jaxlib==0.3.25 sympy h5py scipy tree_math torch matplotlib jax-cfd xarray seaborn
 ```
 Next, on mac run the following commands. On linux, replace `compilemac` and `compilemacLDLT` with `compilelinux` and `compilelinuxLDLT`. 
 ```
