@@ -505,7 +505,7 @@ ts = jnp.linspace(0, T, nt + 1)
 exact_trajectory = vmap(lambda t: map_f_to_DG(f_init, t, p, nx, dx, leg_poly))(ts)
 
 
-diff = trajectory - exact_trajectory
+diff = jnp.abs(trajectory - exact_trajectory)
 
 import matplotlib.pyplot as plt
 fig, axs = plt.subplots(1,2)
