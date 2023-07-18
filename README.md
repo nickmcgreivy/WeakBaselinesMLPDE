@@ -10,7 +10,7 @@ Installation should not take more than a few minutes. First, use GitHub to clone
 ```
 conda create -n pdeenv python=3.9
 conda activate pdeenv
-pip install pybind11 jax jaxlib sympy h5py scipy tree_math torch matplotlib jax-cfd xarray
+pip install pybind11 jax jaxlib sympy h5py scipy tree_math torch matplotlib jax-cfd xarray seaborn
 ```
 Next, on mac run the following commands. On linux, replace `compilemac` and `compilemacLDLT` with `compilelinux` and `compilelinuxLDLT`. 
 ```
@@ -21,9 +21,8 @@ make compilemacLDLT
 mv custom_call_* ..
 cd ..
 ```
-Congratuations, you have compiled and installed all the necessary software to run all the code in this repository.
+Congratuations, you have compiled and installed all the necessary software to run all the code in this repository. Make sure to type `conda activate pdeenv` again if you close the command line terminal.
 
 ## Instructions for use
 
 Each folder titled `article[insert number here]` contains code to reproduce one or more of the results in that article. Each folder contains instructions for running the code contained in that folder, as well as explanations for the output of that code. Most folders take only a few seconds, and no more than a minute, to run. Article 4 takes hours to run, so we include a .png file with the expected output.
-
