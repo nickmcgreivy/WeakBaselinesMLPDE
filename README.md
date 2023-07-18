@@ -10,7 +10,7 @@ Unfortunately, for a complicated set of reasons related to an external dependenc
 
 Installation should not take more than a few minutes. First, use GitHub to clone this code by typing `git clone [HTTPS link here]` into command line. Type `cd WeakBaselinesMLPDE` to enter into the directory. Next, type
 ```
-conda env create -f environment.yml
+conda create -n myenv python=3.9
 conda activate pdeenv
 pip install pybind11 jax jaxlib sympy h5py scipy tree_math torch matplotlib jax-cfd xarray seaborn
 ```
