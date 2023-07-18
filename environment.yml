@@ -1,4 +1,4 @@
-name: pde
+name: pdeenv
 channels:
   - defaults
 dependencies:
