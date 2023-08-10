@@ -1,10 +1,15 @@
 ## Instructions for running code
 
-Simply type `python fnoli2021.py`, and wait a minute or so.
+Simply type `test_poisson_runtime.py`, and wait a minute or so.
 
 On my 2015 MacBook with 2 cores, this produces
 
-
+```
+Time to solve Poisson equation using LU decomposition on 32x32 grid is 9.846687316894531e-05
+Time to solve Poisson equation using LU decomposition on 64x64 grid is 0.0004069805145263672
+Time to solve Poisson equation using LU decomposition on 128x128 grid is 0.002680659294128418
+Time to solve Poisson equation using LU decomposition on 256x256 grid is 0.01187598705291748
+```
 
 ## Instructions for interpreting results
 
