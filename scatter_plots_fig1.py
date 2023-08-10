@@ -45,7 +45,7 @@ y_offset = 1.0
 # Data from review
 #######
 
-num_A = 78
+num_A = 77
 num_B = 60
 
 height_A = math.ceil(num_A / width)
@@ -58,17 +58,17 @@ y_A = np.arange(num_A) // 5
 y_B = np.arange(num_B) // 5
 
 
-n_red_A1 = 58
+n_red_A1 = 56
 n_grey_A1 = 5
-n_green_A1 = 15
+n_green_A1 = 16
 
 n_red_A2 = 10
 n_grey_A2 = 8
-n_green_A2 = 60
+n_green_A2 = 59
 
 n_red_A3 = 0
 n_grey_A3 = 0
-n_green_A3 = 78
+n_green_A3 = 77
 
 n_red_B1 = 60
 n_grey_B1 = 0
