@@ -59,8 +59,8 @@ y_B = np.arange(num_B) // 5
 
 
 n_red_A1 = 56
-n_grey_A1 = 5
-n_green_A1 = 16
+n_grey_A1 = 4
+n_green_A1 = 17
 
 n_red_A2 = 10
 n_grey_A2 = 8
