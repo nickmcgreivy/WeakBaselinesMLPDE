@@ -4,8 +4,6 @@
 
 This code has been tested with MacOS. While we expect this code and instructions to work without modification on Linux, we provide no instructions for how to run this code on Windows. We have tested this code on Python v3.7 and v3.9. All required software can be downloaded using open-source package managers and compiled using binaries in this repository.
 
-Unfortunately, for a complicated set of reasons related to an external dependency on an open-source external software package, we are having difficulties getting the code for article 4 (which runs fine on our conda environment) to run without an error in other environments. We are looking into the problem and will attempt to fix it.
-
 ## Installation guide
 
 Installation should not take more than a few minutes. First, use GitHub to clone this code by typing `git clone [HTTPS link here]` into command line. Type `cd WeakBaselinesMLPDE` to enter into the directory. Next, type
@@ -22,6 +20,11 @@ make compilemac
 make compilemacLDLT
 mv custom_call_* ..
 cd ..
+```
+Finally, locate the path to the Anaconda source code. On my mac, this path is given by `opt/`. Once this path is located, type
+```
+CONDAPATH=[insert path here]
+sed -i -e 's/norm\(\[u.data for u in v\]/norm\(jnp.asarray(\[u.data for u in v\])/g' $CONDAPATH/anaconda3/envs/pdeenv/lib/python3.9/site-packages/jax_cfd/base/initial_conditions.py
 ```
 Congratuations, you have compiled and installed all the necessary software to run all the code in this repository. Make sure to type `conda activate pdeenv` again if you close the command line terminal.
 
