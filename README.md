@@ -21,10 +21,10 @@ make compilemacLDLT
 mv custom_call_* ..
 cd ..
 ```
-Finally, locate the path to the Anaconda source code. On my mac, this path is given by `/opt`. Once this path is located, type
+Finally, locate the path to the Anaconda source code. On my mac, this path is given by `/opt/anaconda3/envs/pdeenv/lib/python3.9`. Once this path is located, type
 ```
 CONDAPATH=[insert path here]
-sed -i -e 's/norm(\[u.data for u in v\]/norm(jnp.asarray(\[u.data for u in v\])/g' $CONDAPATH/anaconda3/envs/pdeenv2/lib/python3.9/site-packages/jax_cfd/base/initial_conditions.py
+sed -i -e 's/norm(\[u.data for u in v\]/norm(jnp.asarray(\[u.data for u in v\])/g' $CONDAPATH/site-packages/jax_cfd/base/initial_conditions.py
 ```
 Congratuations, you have compiled and installed all the necessary software to run all the code in this repository. Make sure to type `conda activate pdeenv` again if you close the command line terminal.
 
