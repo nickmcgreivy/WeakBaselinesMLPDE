@@ -228,7 +228,7 @@ fig2.legend()
 
 ms = 15.0
 axs3.plot(t95_fv[2:], runtime_fv[2:], label="Finite Volume")
-axs3.scatter(t95_fv[1:], runtime_fv[1:], s=ms, label="Finite Volume")
+axs3.scatter(t95_fv[2:], runtime_fv[2:], s=ms, label="Finite Volume")
 axs3.plot(t95_ps[1:-1], runtime_ps[1:-1], label="Pseudospectral")
 axs3.scatter(t95_ps[1:-1], runtime_ps[1:-1], s=ms, label="Pseudospectral")
 #axs3.plot(t95_order0, runtime_dg[0], label="DG p=0")
