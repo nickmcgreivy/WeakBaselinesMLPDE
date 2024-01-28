@@ -9,10 +9,10 @@ nxs_dg = [[16, 32, 64, 128, 256], [8, 16, 32, 48, 64, 96, 128, 192], [8, 16, 24,
 nxs_fv_baseline = [16, 32, 64, 128, 256, 512]
 nxs_ps_baseline = [8, 16, 32, 64, 128, 256]
 
-t_final = 20.0
+t_final = 10.0
 outer_steps = int(t_final * 10)
 t_chunk = t_final / outer_steps
-N_test = 5
+N_test = 3 # average over 3 simulations
 T_runtime = 1.0
 device = 'cpu'
 

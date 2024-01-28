@@ -70,7 +70,7 @@ cfl_safety_cfd = 0.5
 t_final = 10.0
 outer_steps = int(t_final * 10)
 t_chunk = t_final / outer_steps
-N_test = 1 # change to 5 or 10
+N_test = 3 # average over 3 simulations
 
 t_burn_in = 10.0
 
