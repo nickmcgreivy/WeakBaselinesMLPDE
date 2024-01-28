@@ -56,7 +56,7 @@ nxs_ps_baseline = [8, 16, 32, 64, 128, 256]
 cfl_safety_dg = 0.3
 cfl_safety_cfd = 0.5
 
-N_compute_runtime = 5
+N_compute_runtime = 10
 t_runtime = 1.0
 
 ################
