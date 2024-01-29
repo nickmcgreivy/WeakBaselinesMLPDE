@@ -90,79 +90,78 @@ t95_order0 = [0.] * len(nxs_dg[0])
 t95_order1 = [0.] * len(nxs_dg[1])
 t95_order2 = [0.] * len(nxs_dg[2])
 
-for n in range(N_test):
 
-	f_fv = h5py.File("{}/data/corr_run{}_fv.hdf5".format(args.read_write_dir, n),"r",)
-	for i, nx in enumerate(nxs_fv_baseline):
-		j = 0
-		while True:
-			if f_fv[str(nx)][j] < 0.95:
-				break
-			elif j >= (outer_steps):
-				print("WARNING: NOT LESS THAN 0.95, FV, nx ={}".format(nx))
-				break
-			else:
-				j += 1
-		t95_fv[i] += ((j-1) * t_chunk + (0.95 - f_fv[str(nx)][j-1]) / (f_fv[str(nx)][j] - f_fv[str(nx)][j-1]) * t_chunk) / N_test
-	f_fv.close()
-
-
-	f_ps = h5py.File("{}/data/corr_run{}_ps.hdf5".format(args.read_write_dir, n),"r",)
-	for i, nx in enumerate(nxs_ps_baseline):
-		j = 0
-		while True:
-			if f_ps[str(nx)][j] < 0.95:
-				break
-			elif j >= (outer_steps):
-				print("WARNING: NOT LESS THAN 0.95, PS, nx ={}".format(nx))
-				break
-			else:
-				j += 1
-		t95_ps[i] += ((j-1) * t_chunk + (0.95 - f_ps[str(nx)][j-1]) / (f_ps[str(nx)][j] - f_ps[str(nx)][j-1]) * t_chunk) / N_test
-	f_ps.close()
+f_fv = h5py.File("{}/data/corr_run{}_fv.hdf5".format(args.read_write_dir, n),"r",)
+for i, nx in enumerate(nxs_fv_baseline):
+	j = 0
+	while True:
+		if fv_corr[i,j] < 0.95:
+			break
+		elif j >= (outer_steps):
+			print("WARNING: NOT LESS THAN 0.95, FV, nx ={}".format(nx))
+			break
+		else:
+			j += 1
+	t95_fv[i] += ((j-1) * t_chunk + (0.95 - fv_corr[i,j-1]) / (fv_corr[i,j] - fv_corr[i,j-1]) * t_chunk)
+f_fv.close()
 
 
-	f0 = h5py.File("{}/data/corr_run{}_order0.hdf5".format(args.read_write_dir, n),"r")
-	for i, nx in enumerate(nxs_dg[0]):
-		j = 0
-		while True:
-			if f0[str(nx)][j] < 0.95:
-				break
-			elif j >= (outer_steps):
-				print("WARNING: NOT LESS THAN 0.95, order={}, nx ={}".format(1, nx))
-				break
-			else:
-				j += 1
-		t95_order0[i] += ((j-1) * t_chunk + (0.95 - f0[str(nx)][j-1]) / (f0[str(nx)][j] - f0[str(nx)][j-1]) * t_chunk) / N_test
-	f0.close()
+f_ps = h5py.File("{}/data/corr_run{}_ps.hdf5".format(args.read_write_dir, n),"r",)
+for i, nx in enumerate(nxs_ps_baseline):
+	j = 0
+	while True:
+		if ps_corr[i,j] < 0.95:
+			break
+		elif j >= (outer_steps):
+			print("WARNING: NOT LESS THAN 0.95, PS, nx ={}".format(nx))
+			break
+		else:
+			j += 1
+	t95_ps[i] += ((j-1) * t_chunk + (0.95 - ps_corr[i,j-1]) / (ps_corr[i,j] - ps_corr[i,j-1]) * t_chunk)
+f_ps.close()
 
-	f1 = h5py.File("{}/data/corr_run{}_order1.hdf5".format(args.read_write_dir, n),"r")
-	for i, nx in enumerate(nxs_dg[1]):
-		j = 0
-		while True:
-			if f1[str(nx)][j] < 0.95:
-				break
-			elif j >= (outer_steps):
-				print("WARNING: NOT LESS THAN 0.95, order={}, nx ={}".format(1, nx))
-				break
-			else:
-				j += 1
-		t95_order1[i] += ((j-1) * t_chunk + (0.95 - f1[str(nx)][j-1]) / (f1[str(nx)][j] - f1[str(nx)][j-1]) * t_chunk) / N_test
-	f1.close()
 
-	f2 = h5py.File("{}/data/corr_run{}_order2.hdf5".format(args.read_write_dir, n),"r")
-	for i, nx in enumerate(nxs_dg[2]):
-		j = 0
-		while True:
-			if f2[str(nx)][j] < 0.95:
-				break
-			elif j >= (outer_steps):
-				print("WARNING: NOT LESS THAN 0.95, order={}, nx ={}".format(2, nx))
-				break
-			else:
-				j += 1
-		t95_order2[i] += ((j-1) * t_chunk + (0.95 - f2[str(nx)][j-1]) / (f2[str(nx)][j] - f2[str(nx)][j-1]) * t_chunk) / N_test
-	f2.close()
+f0 = h5py.File("{}/data/corr_run{}_order0.hdf5".format(args.read_write_dir, n),"r")
+for i, nx in enumerate(nxs_dg[0]):
+	j = 0
+	while True:
+		if order0_corr[i,j] < 0.95:
+			break
+		elif j >= (outer_steps):
+			print("WARNING: NOT LESS THAN 0.95, order={}, nx ={}".format(1, nx))
+			break
+		else:
+			j += 1
+	t95_order0[i] += ((j-1) * t_chunk + (0.95 - order0_corr[i,j-1]) / (order0_corr[i,j] - order0_corr[i,j-1]) * t_chunk)
+f0.close()
+
+f1 = h5py.File("{}/data/corr_run{}_order1.hdf5".format(args.read_write_dir, n),"r")
+for i, nx in enumerate(nxs_dg[1]):
+	j = 0
+	while True:
+		if order1_corr[i,j] < 0.95:
+			break
+		elif j >= (outer_steps):
+			print("WARNING: NOT LESS THAN 0.95, order={}, nx ={}".format(1, nx))
+			break
+		else:
+			j += 1
+	t95_order1[i] += ((j-1) * t_chunk + (0.95 - order1_corr[i,j-1]) / (order1_corr[i,j] - order1_corr[i,j-1]) * t_chunk)
+f1.close()
+
+f2 = h5py.File("{}/data/corr_run{}_order2.hdf5".format(args.read_write_dir, n),"r")
+for i, nx in enumerate(nxs_dg[2]):
+	j = 0
+	while True:
+		if order2_corr[i,j] < 0.95:
+			break
+		elif j >= (outer_steps):
+			print("WARNING: NOT LESS THAN 0.95, order={}, nx ={}".format(2, nx))
+			break
+		else:
+			j += 1
+	t95_order2[i] += ((j-1) * t_chunk + (0.95 - order2_corr[i,j-1]) / (order2_corr[i,j] - order2_corr[i,j-1]) * t_chunk)
+f2.close()
 
 #### Plot 1: time vs correlation
 fig1, axs1 = plt.subplots()
@@ -228,7 +227,7 @@ fig2.legend()
 
 ms = 15.0
 axs3.plot(t95_fv[2:], runtime_fv[2:], label="Finite Volume")
-axs3.scatter(t95_fv[1:], runtime_fv[1:], s=ms, label="Finite Volume")
+axs3.scatter(t95_fv[2:], runtime_fv[2:], s=ms, label="Finite Volume")
 axs3.plot(t95_ps[1:-1], runtime_ps[1:-1], label="Pseudospectral")
 axs3.scatter(t95_ps[1:-1], runtime_ps[1:-1], s=ms, label="Pseudospectral")
 #axs3.plot(t95_order0, runtime_dg[0], label="DG p=0")
