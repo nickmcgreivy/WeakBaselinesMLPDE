@@ -11,14 +11,11 @@ export BASEDIR READWRITE_DIR POISSON_DIR PYTHONPATH
 compute_runtime:
 	make -f $(MAKE_SCRIPT) compute_runtime
 
+compute_runtime_gputpu:
+	make -f $(MAKE_SCRIPT) compute_runtime_gputpu
+
 compute_corrcoef:
 	make -f $(MAKE_SCRIPT) compute_corrcoef
 
 plot_accuracy_runtime:
 	make -f $(MAKE_SCRIPT) plot_accuracy_runtime
-
-print_FNO_statistics:
-	make -f $(MAKE_SCRIPT) print_fno_statistics
-
-print_CNO_statistics:
-	make -f $(MAKE_SCRIPT) print_cno_statistics
