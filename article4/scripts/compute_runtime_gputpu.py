@@ -214,7 +214,6 @@ def compute_runtime(args, key, device):
     ### FV Baseline
 
     for nx in nxs_fv_baseline:
-        print(nx)
         ny = nx
         u0 = get_u0_fv(key, nx, ny)
         step_fn = get_fv_step_fn(nx, ny, t_runtime)
