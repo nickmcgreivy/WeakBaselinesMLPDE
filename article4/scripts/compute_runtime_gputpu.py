@@ -40,12 +40,12 @@ runge_kutta = "ssp_rk3"
 nx_exact = 192
 ny_exact = 192
 
-nxs_fv_baseline = [16, 32, 64, 128, 256, 512]
-nxs_ps_baseline = [8, 16, 32, 64, 128, 256]
+nxs_fv_baseline = [512, 1024, 2048, 4096, 8192]
+nxs_ps_baseline = [64, 128, 256, 512, 1024]    
 
 cfl_safety_cfd = 0.5
 
-N_compute_runtime = 10
+N_compute_runtime = 3
 t_runtime = 1.0
 
 ################
@@ -214,7 +214,7 @@ def compute_runtime(args, key, device):
     ### FV Baseline
 
     for nx in nxs_fv_baseline:
-
+        print(nx)
         ny = nx
         u0 = get_u0_fv(key, nx, ny)
         step_fn = get_fv_step_fn(nx, ny, t_runtime)
@@ -273,8 +273,7 @@ def main():
 
   from jax.lib import xla_bridge
   device = xla_bridge.get_backend().platform
-  print(device)
-  assert device == 'gpu' or device == 'tpu'
+  print("Device should be GPU, device is {}".format(device))
 
   key = jax.random.PRNGKey(42)
 
