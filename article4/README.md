@@ -28,11 +28,13 @@ runtime per unit time: [7.2787168  7.2734499  7.27894807]
 
 ## Instructions for interpreting code
 
-We would like to replicate figure 1a of article 4 using stronger pseudo-spectral and/or DG baselines.
+We would like to replicate figure 1a of article 4 using stronger pseudo-spectral and/or DG baselines. [Dresdner (2022)](https://arxiv.org/abs/2207.00556) replicates figure 2 on GPU using a stronger pseudo-spectral (PS) baseline. They don't report the runtime on GPU/TPU, but they do conclude that "In contrast to prior work which showed computational speed-ups of up to 1-2 orders of magnitude over baseline finite volume (Kochkov et al., 2021) ... overall there is little potential for accelerating smooth, periodic 2D turbulence beyond traditional spectral solvers." This suggests that, if we were to replicate figure 1a, we would expect to find that a PS baseline would be at least 80x faster than the FV baseline.
 
-[Dresdner (2022)](https://arxiv.org/abs/2207.00556) replicates the result of figure 2 on GPU using a stronger pseudo-spectral (PS) baseline, and in figure 6 finds that the PS baseline achieves comparable accuracy to a FV method at 8x coarser resolution. They don't report the runtime on GPU or TPU of these methods, but they do conclude that "In contrast to prior work which showed computational speed-ups of up to 1-2 orders of magnitude over baseline finite volume (Kochkov et al., 2021) ... overall there is little potential for accelerating smooth, periodic 2D turbulence beyond traditional spectral solvers.'' The supplementary cost-accuracy plot in `data/runtime_corr.png` is consistent with figure 6 of Dresdner (2022), though the runtime is on CPU instead of GPU or TPU.
+Figure 6 of Dresdner (2022) finds that the PS baseline achieves comparable accuracy to a FV method at 8x coarser resolution. The supplementary cost-accuracy plot in `data/runtime_corr.png` is consistent with figure 6 of Dresdner (2022), though the runtime is on CPU instead of GPU or TPU.
 
-The above results show the runtime of each method at each resolution on GPU. Using the above results and figure 6 of Dresdner (2022), implying that the PS baseline has comparable accuracy to the FV baseline at 8x coarser resolution, we can replicate figure 1a.
+The above results show the runtime of the FV and PS baselines at different resolutions GPU. Using the above results and assuming that the PS baseline has comparable accuracy to the FV baseline at 8x coarser resolution (as found in figure 6 of Dresdner (2022)), we can replicate figure 1a.
+
+Our replication of figure 1a is in `data/replicate_figure1.png`. It shows a 36-115x speedup over the FV baseline using the PS baseline, in contrast to the 40-80x speedup over the FV baseline using the NN method. This is consistent with the conclusion of Dresdner (2022).
 
 ## Instructions for running supplementary code to produce cost-accuracy plots on CPU
 
