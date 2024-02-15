@@ -1,4 +1,4 @@
-# Weak baselines in machine learning for partial differential equation research
+# Weak baselines in machine learning for fluid-related partial differential equations research
 
 ## System requirements
 
