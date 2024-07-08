@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/616775457.svg)](https://zenodo.org/doi/10.5281/zenodo.12682907)
+
 # Weak baselines in machine learning for fluid-related partial differential equations research
 
 ## System requirements
